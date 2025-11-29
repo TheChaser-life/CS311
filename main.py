@@ -38,7 +38,7 @@ if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
 st.title("🕵️‍♂️ AI Resume & Career Analyzer")
-st.caption("Phát triển bởi Võ Phước Thịnh, Liên Phúc Thịnh và Nguyễn Tấn Phúc Thịnh - The Unwithering Trio")
+st.caption("Phát triển bởi Võ Phước Thịnh, Liên Phúc Thịnh và Lê Ngọc Thanh Toàn - The Unwithering Trio")
 st.markdown("---")
 
 if not os.getenv("OPENAI_API_KEY"):
@@ -405,5 +405,5 @@ with tab4:
             st.rerun()
 
 st.markdown("---")
-st.caption("Phát triển bởi Võ Phước Thịnh, Liên Phúc Thịnh và Nguyễn Tấn Phúc Thịnh - Powered by LangChain & GPT-4o")
+st.caption("Phát triển bởi Võ Phước Thịnh, Liên Phúc Thịnh và Lê Ngọc Thanh Toàn - Powered by LangChain & GPT-4o")
 st.caption("Version 3.0 - GPT-4o Vision OCR • Job Search • CV Improvement • Layout Analysis • Interview Status • AI Chat Assistant")

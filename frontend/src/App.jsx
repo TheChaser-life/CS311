@@ -632,7 +632,7 @@ export default function App() {
             transition={{ delay: 0.3 }}
             className="text-slate-500 text-sm mt-2"
           >
-            by Võ Phước Thịnh, Liên Phúc Thịnh & Nguyễn Tấn Phúc Thịnh
+            by Võ Phước Thịnh, Liên Phúc Thịnh & Lê Ngọc Thanh Toàn
           </motion.p>
         </div>
       </header>
