@@ -7,10 +7,7 @@ pymupdf
 pdf2image
 pytesseract
 Pillow
-sentence-transformers
-scikit-learn
 numpy
-sentencepiece
 protobuf
 # FastAPI Backend
 fastapi
