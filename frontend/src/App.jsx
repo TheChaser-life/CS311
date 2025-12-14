@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FileText, Search, Sparkles, MessageCircle, Video,
+  FileText, Search, Sparkles, MessageCircle,
   Upload, Send, Loader2, CheckCircle2, AlertCircle,
   Briefcase, GraduationCap, Target, ArrowRight, Trash2
 } from 'lucide-react';
@@ -9,16 +9,50 @@ import ReactMarkdown from 'react-markdown';
 import { useDropzone } from 'react-dropzone';
 import toast, { Toaster } from 'react-hot-toast';
 import axios from 'axios';
-import InterviewTab from './InterviewTab';
 
-const API_BASE = 'http://localhost:8000';
+const resolveApiBase = () => {
+  const envBase = import.meta.env?.VITE_API_BASE;
+  if (envBase) {
+    return envBase;
+  }
+
+  if (typeof window !== 'undefined') {
+    if (window.__API_BASE__) {
+      return window.__API_BASE__;
+    }
+
+    try {
+      const url = new URL(window.location.href);
+      url.port = '8000';
+      return url.origin;
+    } catch (error) {
+      console.warn('Falling back to default API base due to URL parse error', error);
+    }
+  }
+
+  return 'http://localhost:8000';
+};
+
+const API_BASE = resolveApiBase();
+const SESSION_STORAGE_KEY = 'resume_session_id';
+
+const generateSessionId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return [
+    'sess',
+    Date.now().toString(36),
+    Math.random().toString(36).substring(2, 10),
+  ].join('-');
+};
 
 // Tab Configuration
 const tabs = [
   { id: 'analyze', label: 'Phân Tích CV-JD', icon: FileText },
   { id: 'jobs', label: 'Tìm Việc Làm', icon: Search },
   { id: 'improve', label: 'Cải Thiện CV', icon: Sparkles },
-  { id: 'interview', label: 'Phỏng Vấn Ảo', icon: Video },
   { id: 'chat', label: 'Chat AI', icon: MessageCircle },
 ];
 
@@ -64,6 +98,17 @@ const FileDropzone = ({ onDrop, label, accept }) => {
   );
 };
 
+const markdownComponents = {
+  a: ({ node, ...props }) => (
+    <a
+      {...props}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-400 underline hover:text-blue-300 transition-colors"
+    />
+  ),
+};
+
 const ResultCard = ({ result, loading }) => {
   if (loading) {
     return (
@@ -89,25 +134,28 @@ const ResultCard = ({ result, loading }) => {
       animate={{ opacity: 1, y: 0 }}
       className="card markdown-content"
     >
-      <ReactMarkdown>{result}</ReactMarkdown>
+      <ReactMarkdown components={markdownComponents}>{result}</ReactMarkdown>
     </motion.div>
   );
 };
 
 // Main Tabs
-const AnalyzeTab = () => {
+const AnalyzeTab = ({ state, setState, sessionReady }) => {
   const [cvFile, setCvFile] = useState(null);
   const [jdFile, setJdFile] = useState(null);
   const [cvText, setCvText] = useState('');
   const [jdText, setJdText] = useState('');
   const [cvMode, setCvMode] = useState('text');
   const [jdMode, setJdMode] = useState('text');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState('');
+  const { loading, result } = state;
 
   const handleAnalyze = async () => {
-    setLoading(true);
-    setResult('');
+    if (!sessionReady) {
+      toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
+      return;
+    }
+
+    setState(prev => ({ ...prev, loading: true, result: '' }));
     
     try {
       const formData = new FormData();
@@ -129,7 +177,7 @@ const AnalyzeTab = () => {
       });
 
       if (response.data.success) {
-        setResult(response.data.result);
+        setState(prev => ({ ...prev, result: response.data.result }));
         // Show storage status
         if (response.data.cv_stored) {
           toast.success('CV đã được lưu!', { duration: 2000 });
@@ -142,7 +190,7 @@ const AnalyzeTab = () => {
       toast.error('Lỗi kết nối server!');
       console.error(error);
     } finally {
-      setLoading(false);
+      setState(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -238,7 +286,7 @@ const AnalyzeTab = () => {
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleAnalyze}
-        disabled={loading}
+        disabled={loading || !sessionReady}
         className="btn-primary w-full text-lg flex items-center justify-center gap-3"
       >
         {loading ? (
@@ -260,19 +308,22 @@ const AnalyzeTab = () => {
   );
 };
 
-const JobsTab = () => {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState('');
+const JobsTab = ({ state, setState, sessionReady }) => {
+  const { loading, result } = state;
 
   const handleFindJobs = async () => {
-    setLoading(true);
-    setResult('');
+    if (!sessionReady) {
+      toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
+      return;
+    }
+
+    setState(prev => ({ ...prev, loading: true, result: '' }));
     
     try {
       const response = await axios.post(`${API_BASE}/api/find-jobs`);
       
       if (response.data.success) {
-        setResult(response.data.result);
+        setState(prev => ({ ...prev, result: response.data.result }));
         toast.success('Tìm việc hoàn tất!');
       } else {
         toast.error(response.data.result);
@@ -280,7 +331,7 @@ const JobsTab = () => {
     } catch (error) {
       toast.error('Lỗi kết nối server!');
     } finally {
-      setLoading(false);
+      setState(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -299,7 +350,7 @@ const JobsTab = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleFindJobs}
-            disabled={loading}
+            disabled={loading || !sessionReady}
             className="btn-primary text-lg inline-flex items-center gap-3"
           >
             {loading ? (
@@ -340,41 +391,56 @@ const JobsTab = () => {
   );
 };
 
-const ImproveTab = () => {
-  const [loading, setLoading] = useState(false);
-  const [layoutLoading, setLayoutLoading] = useState(false);
-  const [result, setResult] = useState('');
-  const [layoutResult, setLayoutResult] = useState('');
+const ImproveTab = ({ state, setState, sessionReady }) => {
+  const { loading, layoutLoading, result, layoutResult, docxWarning } = state;
   const [layoutFile, setLayoutFile] = useState(null);
 
   const handleSuggestImprovements = async () => {
-    setLoading(true);
-    setResult('');
+    if (!sessionReady) {
+      toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
+      return;
+    }
+
+    setState(prev => ({
+      ...prev,
+      loading: true,
+      result: '',
+      docxWarning: ''
+    }));
     
     try {
       const response = await axios.post(`${API_BASE}/api/suggest-cv-improvements`);
       
       if (response.data.success) {
-        setResult(response.data.result);
-        toast.success('Đề xuất hoàn tất!');
+        setState(prev => ({ ...prev, result: response.data.result }));
+        if (response.data.warning) {
+          setState(prev => ({ ...prev, docxWarning: response.data.warning }));
+          toast.error(response.data.warning);
+        } else {
+          toast.success('Đề xuất hoàn tất!');
+        }
       } else {
         toast.error(response.data.result);
       }
     } catch (error) {
       toast.error('Lỗi kết nối server!');
     } finally {
-      setLoading(false);
+      setState(prev => ({ ...prev, loading: false }));
     }
   };
 
   const handleAnalyzeLayout = async () => {
+    if (!sessionReady) {
+      toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
+      return;
+    }
+
     if (!layoutFile) {
       toast.error('Vui lòng upload ảnh CV!');
       return;
     }
 
-    setLayoutLoading(true);
-    setLayoutResult('');
+    setState(prev => ({ ...prev, layoutLoading: true, layoutResult: '' }));
     
     try {
       const formData = new FormData();
@@ -385,7 +451,7 @@ const ImproveTab = () => {
       });
 
       if (response.data.success) {
-        setLayoutResult(response.data.result);
+        setState(prev => ({ ...prev, layoutResult: response.data.result }));
         toast.success('Phân tích layout hoàn tất!');
       } else {
         toast.error(response.data.result);
@@ -393,7 +459,7 @@ const ImproveTab = () => {
     } catch (error) {
       toast.error('Lỗi kết nối server!');
     } finally {
-      setLayoutLoading(false);
+      setState(prev => ({ ...prev, layoutLoading: false }));
     }
   };
 
@@ -410,7 +476,7 @@ const ImproveTab = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleSuggestImprovements}
-            disabled={loading}
+            disabled={loading || !sessionReady}
             className="btn-primary w-full"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Đề Xuất Chỉnh Sửa'}
@@ -432,7 +498,7 @@ const ImproveTab = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyzeLayout}
-            disabled={layoutLoading || !layoutFile}
+            disabled={layoutLoading || !layoutFile || !sessionReady}
             className="btn-secondary w-full mt-4"
           >
             {layoutLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Phân Tích Layout'}
@@ -441,37 +507,47 @@ const ImproveTab = () => {
       </div>
 
       <ResultCard result={result} loading={loading} />
+
+      {docxWarning && (
+        <div className="card border border-yellow-500/40 bg-yellow-500/10 text-sm text-yellow-200">
+          {docxWarning}
+        </div>
+      )}
+
       <ResultCard result={layoutResult} loading={layoutLoading} />
     </div>
   );
 };
 
-const ChatTab = () => {
-  const [messages, setMessages] = useState([]);
+const ChatTab = ({ state, setState, sessionReady }) => {
+  const { messages, loading } = state;
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const sendMessage = async (text) => {
     if (!text.trim()) return;
+    if (!sessionReady) {
+      toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
+      return;
+    }
     
     const userMessage = { role: 'user', content: text };
-    setMessages(prev => [...prev, userMessage]);
+    setState(prev => ({ ...prev, messages: [...prev.messages, userMessage] }));
     setInput('');
-    setLoading(true);
+    setState(prev => ({ ...prev, loading: true }));
 
     try {
       const response = await axios.post(`${API_BASE}/api/chat`, { message: text });
       
       if (response.data.success) {
         const aiMessage = { role: 'assistant', content: response.data.result };
-        setMessages(prev => [...prev, aiMessage]);
+        setState(prev => ({ ...prev, messages: [...prev.messages, aiMessage] }));
       } else {
         toast.error(response.data.result);
       }
     } catch (error) {
       toast.error('Lỗi kết nối server!');
     } finally {
-      setLoading(false);
+      setState(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -509,7 +585,9 @@ const ChatTab = () => {
                 }`}>
                   {msg.role === 'assistant' ? (
                     <div className="markdown-content">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown components={markdownComponents}>
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
                   ) : (
                     msg.content
@@ -542,7 +620,7 @@ const ChatTab = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => sendMessage(input)}
-            disabled={loading || !input.trim()}
+            disabled={loading || !input.trim() || !sessionReady}
             className="btn-primary px-6"
           >
             <Send className="w-5 h-5" />
@@ -550,7 +628,7 @@ const ChatTab = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setMessages([])}
+            onClick={() => setState(prev => ({ ...prev, messages: [] }))}
             className="btn-secondary px-4"
           >
             <Trash2 className="w-5 h-5" />
@@ -580,15 +658,81 @@ const ChatTab = () => {
 // Main App
 export default function App() {
   const [activeTab, setActiveTab] = useState('analyze');
+  const [analyzeState, setAnalyzeState] = useState({ loading: false, result: '' });
+  const [jobsState, setJobsState] = useState({ loading: false, result: '' });
+  const [improveState, setImproveState] = useState({
+    loading: false,
+    result: '',
+    docxWarning: '',
+    layoutLoading: false,
+    layoutResult: '',
+  });
+  const [chatState, setChatState] = useState({ messages: [], loading: false });
+  const [sessionReady, setSessionReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      let sessionId = window.localStorage.getItem(SESSION_STORAGE_KEY);
+      if (!sessionId) {
+        sessionId = generateSessionId();
+        window.localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+      }
+
+      axios.defaults.baseURL = API_BASE;
+      axios.defaults.headers.common['X-Session-Id'] = sessionId;
+      setSessionReady(true);
+    } catch (error) {
+      console.error('Failed to initialize session ID', error);
+      toast.error('Không thể khởi tạo phiên làm việc. Hãy tải lại trang!');
+    }
+  }, []);
 
   const renderTab = () => {
     switch (activeTab) {
-      case 'analyze': return <AnalyzeTab />;
-      case 'jobs': return <JobsTab />;
-      case 'improve': return <ImproveTab />;
-      case 'interview': return <InterviewTab />;
-      case 'chat': return <ChatTab />;
-      default: return <AnalyzeTab />;
+      case 'analyze':
+        return (
+          <AnalyzeTab
+            state={analyzeState}
+            setState={setAnalyzeState}
+            sessionReady={sessionReady}
+          />
+        );
+      case 'jobs':
+        return (
+          <JobsTab
+            state={jobsState}
+            setState={setJobsState}
+            sessionReady={sessionReady}
+          />
+        );
+      case 'improve':
+        return (
+          <ImproveTab
+            state={improveState}
+            setState={setImproveState}
+            sessionReady={sessionReady}
+          />
+        );
+      case 'chat':
+        return (
+          <ChatTab
+            state={chatState}
+            setState={setChatState}
+            sessionReady={sessionReady}
+          />
+        );
+      default:
+        return (
+          <AnalyzeTab
+            state={analyzeState}
+            setState={setAnalyzeState}
+            sessionReady={sessionReady}
+          />
+        );
     }
   };
 
@@ -640,6 +784,11 @@ export default function App() {
       {/* Main Content */}
       <main className="relative z-10 px-6 pb-12">
         <div className="max-w-6xl mx-auto">
+          {!sessionReady && (
+            <div className="card border border-slate-700/60 bg-slate-900/60 text-sm text-slate-300 mb-6">
+              Đang khởi tạo phiên làm việc với máy chủ...
+            </div>
+          )}
           {/* Tabs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

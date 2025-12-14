@@ -1,0 +1,21 @@
+langchain-community
+langchain-core
+langchain-openai
+python-dotenv
+openai
+pymupdf
+pdf2image
+pytesseract
+Pillow
+sentence-transformers
+scikit-learn
+numpy
+sentencepiece
+protobuf
+# FastAPI Backend
+fastapi
+uvicorn[standard]
+python-multipart
+# Search Tools
+tavily-python
+redis

@@ -1,10 +1,16 @@
 import os
+from typing import Any, Dict, List, Union
+
 import streamlit as st
 from langchain_openai import ChatOpenAI
-from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from langchain_core.tools import tool
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage, AIMessage 
 from dotenv import load_dotenv
 import base64
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -201,7 +207,7 @@ def tool_calculate_match_score(dummy: str = "run") -> str:
 def tool_find_jobs_online(search_query: str) -> str:
     """
     Tìm kiếm việc làm thực tế trên mạng bằng Tavily (Google Search tối ưu cho AI).
-    Input: Câu truy vấn tìm kiếm (Ví dụ: "Python Developer tuyển dụng hcm")
+    Input: Câu truy vấn tìm kiếm (Ví dụ: "Recruiting Python Developer jobs")
     Output: Danh sách các kết quả tìm kiếm (Tiêu đề + Link + Nội dung tóm tắt)
     """
     try:
@@ -469,9 +475,122 @@ TẠO MÔ TẢ VISUAL LAYOUT MỚI:
     except Exception as e:
         return f"ERROR: Không thể tạo mô tả CV - {str(e)}"
 
+
+class ToolCallingAgentRunner:
+    """Tối giản AgentExecutor thay thế bằng OpenAI tool-calling run loop."""
+
+    def __init__(
+        self,
+        llm: ChatOpenAI,
+        tools: List[Any],
+        system_message: str,
+        verbose: bool = False,
+    ) -> None:
+        self.llm = llm
+        self.llm_with_tools = llm.bind_tools(tools)
+        self.tool_map = {tool.name: tool for tool in tools}
+        self.system_message = system_message
+        self.verbose = verbose
+
+    def _format_history(
+        self, history: Union[List[BaseMessage], None, List[Any]]
+    ) -> List[BaseMessage]:
+        if not history:
+            return []
+
+        formatted: List[BaseMessage] = []
+        for item in history:
+            if isinstance(item, BaseMessage):
+                formatted.append(item)
+                continue
+
+            if isinstance(item, dict):
+                role = item.get("role") or item.get("type")
+                content = item.get("content", "")
+                if role in ("human", "user"):
+                    formatted.append(HumanMessage(content=str(content)))
+                elif role in ("ai", "assistant"):
+                    formatted.append(AIMessage(content=str(content)))
+                elif role == "system":
+                    formatted.append(SystemMessage(content=str(content)))
+                elif role == "tool":
+                    formatted.append(
+                        ToolMessage(
+                            content=str(content),
+                            tool_call_id=item.get("tool_call_id", ""),
+                        )
+                    )
+                continue
+
+            if isinstance(item, str):
+                formatted.append(HumanMessage(content=item))
+
+        return formatted
+
+    def invoke(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        user_input = inputs.get("input", "")
+        history = self._format_history(inputs.get("chat_history"))
+
+        messages: List[BaseMessage] = []
+        if self.system_message:
+            messages.append(SystemMessage(content=self.system_message))
+
+        messages.extend(history or [])
+        messages.append(HumanMessage(content=user_input))
+
+        while True:
+            response: AIMessage = self.llm_with_tools.invoke(messages)
+            messages.append(response)
+
+            if self.verbose:
+                print("🤖 Agent:", response.content)
+
+            tool_calls = getattr(response, "tool_calls", None) or []
+            if not tool_calls:
+                return {"output": response.content, "messages": messages}
+
+            if self.verbose:
+                print("🔧 Tool calls:", tool_calls)
+
+            for tool_call in tool_calls:
+                tool_name = getattr(tool_call, "name", None) or getattr(
+                    tool_call, "tool_name", None
+                ) or (tool_call.get("name") if isinstance(tool_call, dict) else None)
+                tool_args = getattr(tool_call, "args", None) or getattr(
+                    tool_call, "arguments", None
+                )
+                if tool_args is None and isinstance(tool_call, dict):
+                    tool_args = tool_call.get("args") or tool_call.get("arguments") or {}
+
+                tool_call_id = getattr(tool_call, "id", None)
+                if tool_call_id is None and isinstance(tool_call, dict):
+                    tool_call_id = tool_call.get("id") or tool_call.get("tool_call_id")
+
+                tool = self.tool_map.get(tool_name)
+
+                if not tool:
+                    tool_output = f"ERROR: Tool '{tool_name}' không tồn tại."
+                else:
+                    try:
+                        tool_output = tool.invoke(tool_args or {})
+                    except Exception as exc:
+                        tool_output = f"ERROR: {exc}"
+
+                if not isinstance(tool_output, str):
+                    tool_output = str(tool_output)
+
+                if self.verbose:
+                    trimmed = tool_output[:200]
+                    suffix = "..." if len(tool_output) > 200 else ""
+                    print(f"🛠️ {tool_name}: {trimmed}{suffix}")
+
+                messages.append(
+                    ToolMessage(content=tool_output, tool_call_id=tool_call_id or "")
+                )
+
 def initialize_agent():
     """Khởi tạo Agent."""
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    llm = ChatOpenAI(model="gpt-5o", temperature=0)
     
     tools = [
         tool_extract_text_from_file,
@@ -514,23 +633,12 @@ QUAN TRỌNG:
 - Khi cần đánh giá layout CV: Dùng tool_analyze_cv_layout với đường dẫn file.
 - Trả lời tiếng Việt, trình bày đẹp, rõ ràng."""
     
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_message),
-        MessagesPlaceholder(variable_name="chat_history"),
-        ("user", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-    
-    agent = create_openai_tools_agent(llm, tools, prompt)
-    
-    agent_executor = AgentExecutor(
-        agent=agent,
+    return ToolCallingAgentRunner(
+        llm=llm,
         tools=tools,
+        system_message=system_message,
         verbose=True,
-        handle_parsing_errors=True,
     )
-    
-    return agent_executor
 
 
 def analyze_cv_jd(cv_input: str, jd_input: str, cv_type: str = "text", jd_type: str = "text"):

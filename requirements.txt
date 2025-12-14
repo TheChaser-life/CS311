@@ -1,10 +1,10 @@
 streamlit
-langchain==0.1.20
-langchain-community==0.0.38
-langchain-core==0.1.52
-langchain-openai==0.1.6
-langgraph==0.0.39
-langchain-classic==0.0.1
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langgraph
+langchain-classic
 python-dotenv
 openai
 pymupdf
@@ -23,3 +23,5 @@ python-multipart
 # Search Tools
 tavily-python
 duckduckgo-search
+python-docx
+redis
