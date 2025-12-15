@@ -331,7 +331,7 @@ def tool_calculate_match_score(dummy: str = "run") -> str:
 def tool_find_jobs_online(search_query: str) -> str:
     """Tìm kiếm việc làm trên mạng."""
     try:
-        search_tool = TavilySearchResults(max_results=5)  # Khởi tạo tool Tavily với giới hạn 5 kết quả.
+        search_tool = TavilySearchResults(max_results=3)  # Khởi tạo tool Tavily với giới hạn 5 kết quả.
         results = search_tool.invoke({"query": search_query})  # Thực thi truy vấn tìm kiếm.
         
         formatted_results = ""  # Build chuỗi markdown để agent nhúng vào báo cáo.
