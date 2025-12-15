@@ -417,6 +417,28 @@ def tool_suggest_jobs(dummy: str = "run") -> str:
 
 
 @tool
+def tool_find_courses_online(search_query: str) -> str:
+    """
+    Tìm kiếm khóa học trực tuyến liên quan tới kỹ năng còn thiếu.
+    Sử dụng Tavily (search engine) tương tự tool_find_jobs_online.
+    """
+    try:
+        search_tool = TavilySearchResults(max_results=5)
+        results = search_tool.invoke({"query": search_query})
+
+        formatted_results = ""
+        for item in results:
+            title = item.get("title") or item.get("content", "")[:80]
+            url = item.get("url")
+            snippet = item.get("content", "")[:160]
+            formatted_results += f"- **{title}**\n  - 🔗 {url}\n  - 📝 {snippet}\n\n"
+
+        return formatted_results or "Không tìm thấy khóa học phù hợp."
+    except Exception as e:
+        return f"ERROR searching courses: {str(e)}"
+
+
+@tool
 def tool_suggest_cv_improvements(dummy: str = "run") -> str:
     """Đề xuất chỉnh sửa CV."""
     global _session_storage
@@ -557,6 +579,7 @@ def initialize_agent_api(verbose: bool = False) -> ToolCallingAgentRunner:
         tool_analyze_skills,
         tool_suggest_jobs,
         tool_find_jobs_online,
+        tool_find_courses_online,
         tool_suggest_cv_improvements,
         tool_analyze_cv_layout,
         tool_generate_improved_cv_image,
@@ -615,7 +638,7 @@ BƯỚC 4: PHÂN TÍCH KỸ NĂNG
 Gọi: tool_analyze_skills("run")
 
 BƯỚC 5: GỢI Ý KHÓA HỌC
-Dựa vào missing_skills, đề xuất 3-5 khóa học từ Coursera, Udemy, edX.
+Bước này hãy gọi tool_find_courses_online nhiều lần (mỗi lần với 1 kỹ năng thiếu) để tìm 1-2 khóa học phù hợp và trả kèm link.
 
 BƯỚC 6: VIẾT BÁO CÁO
 # 📊 KẾT QUẢ PHÂN TÍCH
