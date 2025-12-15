@@ -1,4 +1,6 @@
 # %%
+"""Tiện ích OCR/reader cho CV: phối hợp PyMuPDF + Tesseract."""
+
 import re
 import pymupdf
 import pytesseract
@@ -7,7 +9,8 @@ from PIL import Image
 import platform
 import shutil
 import os
-# %%
+
+# --- Thiết lập đường dẫn Tesseract tùy hệ điều hành ---
 if platform.system() == "Windows":
     tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
     if os.path.exists(tesseract_path):
@@ -18,8 +21,9 @@ else:
         pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
     else:
         pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-# %%   
+# %%
 def clean_extracted_text(text):
+    """Lọc bỏ ký tự thừa, marker số trang và gom dòng về format ổn định."""
     if not text: return ""
     page_patterns = [
         r'(?i)page\s+\d+(?:\s+of\s+\d+)?',
@@ -49,6 +53,9 @@ def clean_extracted_text(text):
 
 # %%
 def extract_text_hybrid_fixed(pdf_path, dpi=300, lang="eng", min_char=50):
+    """
+    Đọc PDF bằng PyMuPDF, fallback OCR bằng Tesseract nếu trang thiếu text layer.
+    """
     try:
         doc = pymupdf.open(pdf_path)
         text_output = ""
@@ -86,6 +93,7 @@ def extract_text_hybrid_fixed(pdf_path, dpi=300, lang="eng", min_char=50):
 
 # %%
 def categorize_resume_text(text):
+    """Placeholder: chuẩn bị cho việc phân loại section nếu cần mở rộng."""
     if not text: return {"error": "No text"}
     section_keywords = {
         'contact_info': ['email', 'phone', 'address', 'linkedin', 'github', 'contact'],
@@ -99,6 +107,7 @@ def categorize_resume_text(text):
     return {"categorized_sections": {}, "extracted_contacts": {}}
 # %%
 def extract_text_from_image(image_path: str, lang="eng") -> str:
+    """Chạy OCR trực tiếp cho ảnh đơn lẻ (PNG/JPG)."""
     try:
         img = Image.open(image_path)
         text = pytesseract.image_to_string(img, lang=lang)
@@ -107,6 +116,7 @@ def extract_text_from_image(image_path: str, lang="eng") -> str:
         return f"Error reading image: {str(e)}"
 # %%
 def process_raw_text(text: str) -> str:
+    """Làm sạch text thuần túy trước khi đưa qua agent."""
     if not text:
         return ""
     return clean_extracted_text(text)

@@ -1,6 +1,6 @@
 """
-FastAPI Backend for AI Resume Analyzer
-Kết nối với React Frontend
+FastAPI Backend for AI Resume Analyzer.
+Đảm nhiệm việc kết nối React frontend với tầng AI agent và Redis session store.
 """
 
 import os
@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
+# --- Redis cấu hình & session store ---
+# Ưu tiên REDIS_URL nếu tồn tại; fallback sang host/port rời rạc.
 REDIS_URL = os.getenv("REDIS_URL")
 REDIS_HOST = os.getenv("REDIS_HOST", "192.168.200.99")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
@@ -30,10 +32,12 @@ SESSION_KEY_PREFIX = os.getenv("SESSION_KEY_PREFIX", "resume:session:")
 SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "3600"))
 
 if REDIS_URL:
+    # Kết nối theo URL (thường dùng cho dịch vụ managed như Upstash).
     redis_client = redis.Redis.from_url(
         REDIS_URL, decode_responses=True, health_check_interval=30
     )
 else:
+    # Kết nối thủ công tới Redis nội bộ / docker compose.
     redis_client = redis.Redis(
         host=REDIS_HOST,
         port=REDIS_PORT,
@@ -44,20 +48,24 @@ else:
     )
 
 try:
+    # Kiểm tra kết nối ngay khi khởi động để fail fast nếu Redis không chạy.
     redis_client.ping()
 except RedisError as exc:
     raise RuntimeError(f"Không thể kết nối Redis: {exc}") from exc
 
 
 def _new_session_state() -> dict:
+    """Khởi tạo template session mặc định cho mỗi người dùng."""
     return {"cv_text": "", "jd_text": "", "chat_history": []}
 
 
 def _session_key(session_id: str) -> str:
+    """Tạo Redis key nhất quán cho từng session ID."""
     return f"{SESSION_KEY_PREFIX}{session_id}"
 
 
 def load_session_state(session_id: str) -> dict:
+    """Đọc session từ Redis và đảm bảo luôn trả về cấu trúc hợp lệ."""
     try:
         raw = redis_client.get(_session_key(session_id))
     except RedisError as exc:
@@ -84,6 +92,10 @@ def load_session_state(session_id: str) -> dict:
 
 
 def persist_session_state(session_id: str, session: dict) -> bool:
+    """
+    Ghi session về Redis với TTL.
+    Đồng thời ép kiểu dữ liệu để tránh lỗi serialize khi agent trả kiểu lạ.
+    """
     payload = {
         "cv_text": session.get("cv_text", "") or "",
         "jd_text": session.get("jd_text", "") or "",
@@ -106,12 +118,14 @@ def persist_session_state(session_id: str, session: dict) -> bool:
 
 
 def clear_session_state(session_id: str) -> None:
+    """Xóa hẳn session khỏi Redis (dùng khi người dùng thoát hoặc yêu cầu)."""
     try:
         redis_client.delete(_session_key(session_id))
     except RedisError as exc:
         print(f"[Redis] Failed to clear session {session_id}: {exc}")
 
-# Import agent functions
+# --- Agent layer (LangChain + OpenAI) ---
+# Import relative trước; fallback sang absolute khi chạy trực tiếp.
 try:
     from agent_api import (
         analyze_cv_jd_api,
@@ -131,16 +145,17 @@ except ImportError:
     generate_improved_cv_api
     )
 
-# Import interview router
+# (Module phỏng vấn ảo đã bị loại khỏi frontend nên không include router nào ở đây.)
 
 
+# Khởi tạo ứng dụng FastAPI chính.
 app = FastAPI(
     title="AI Resume Analyzer API",
     description="API cho hệ thống phân tích CV và tìm việc làm",
     version="3.0"
 )
 
-# CORS for React frontend
+# Cho phép frontend (Vite dev server, build, v.v.) gọi API mà không bị chặn CORS.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5173", "*"],
@@ -149,10 +164,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include interview router
-
-
 # ========== MODELS ==========
+# Pydantic schema phục vụ validate payload cho các endpoint JSON.
 class TextInput(BaseModel):
     cv_text: Optional[str] = ""
     jd_text: Optional[str] = ""
@@ -184,7 +197,7 @@ async def analyze_cv_jd(
     jd_text: Optional[str] = Form(None),
     session_id: str = Header(..., alias="X-Session-Id"),
 ):
-    """Phân tích CV và JD"""
+    """Phân tích CV và JD."""
     session_storage = load_session_state(session_id)
     temp_files: list[str] = []
     try:
@@ -193,7 +206,7 @@ async def analyze_cv_jd(
         cv_type = "text"
         jd_type = "text"
         
-        # Process CV
+        # --- Đọc CV ---
         if cv_file and cv_file.filename:
             cv_type = "file"
             suffix = "." + cv_file.filename.split('.')[-1]
@@ -207,7 +220,7 @@ async def analyze_cv_jd(
         else:
             raise HTTPException(status_code=400, detail="CV is required")
         
-        # Process JD
+        # --- Đọc JD ---
         if jd_file and jd_file.filename:
             jd_type = "file"
             suffix = "." + jd_file.filename.split('.')[-1]
@@ -221,13 +234,13 @@ async def analyze_cv_jd(
         else:
             raise HTTPException(status_code=400, detail="JD is required")
         
-        # Store text inputs directly (in case agent doesn't)
+        # Lưu text trực tiếp ngay lập tức để đảm bảo session có dữ liệu.
         if cv_type == "text" and cv_input:
             session_storage["cv_text"] = cv_input
         if jd_type == "text" and jd_input:
             session_storage["jd_text"] = jd_input
         
-        # Call agent
+        # Gọi tầng agent để thực hiện các bước phân tích.
         result = analyze_cv_jd_api(cv_input, jd_input, cv_type, jd_type, session_storage)
         response = {
             "success": True, 
@@ -252,7 +265,7 @@ async def analyze_cv_jd(
                 "result": "Error: Unable to persist session data.",
             }
     else:
-        # vẫn cập nhật TTL cho session ngay cả khi thất bại
+        # Vẫn cập nhật TTL cho session ngay cả khi thất bại để tránh timeout đột ngột.
         persist_session_state(session_id, session_storage)
 
     return response
@@ -260,7 +273,7 @@ async def analyze_cv_jd(
 
 @app.post("/api/find-jobs")
 async def find_jobs(session_id: str = Header(..., alias="X-Session-Id")):
-    """Tìm việc làm phù hợp với CV đã lưu"""
+    """Tìm việc làm phù hợp với CV đã lưu."""
     session_storage = load_session_state(session_id)
     try:
         result = find_suitable_jobs_api(session_storage)
@@ -285,7 +298,7 @@ async def chat(
     input_data: ChatInput,
     session_id: str = Header(..., alias="X-Session-Id"),
 ):
-    """Chat với AI Assistant"""
+    """Chat với AI Assistant."""
     session_storage = load_session_state(session_id)
     try:
         result = chat_with_agent_api(input_data.message, session_storage)
@@ -309,7 +322,7 @@ async def chat(
 async def suggest_cv_improvements(
     session_id: str = Header(..., alias="X-Session-Id"),
 ):
-    """Đề xuất chỉnh sửa CV"""
+    """Đề xuất chỉnh sửa CV."""
     session_storage = load_session_state(session_id)
     try:
         result = suggest_cv_improvements_api(session_storage)
@@ -359,7 +372,7 @@ async def analyze_cv_layout(
     file: UploadFile = File(...),
     session_id: str = Header(..., alias="X-Session-Id"),
 ):
-    """Phân tích layout CV từ file ảnh"""
+    """Phân tích layout CV từ file ảnh."""
     session_storage = load_session_state(session_id)
     temp_path: Optional[str] = None
     try:
@@ -388,7 +401,7 @@ async def analyze_cv_layout(
 
 @app.post("/api/generate-improved-cv")
 async def generate_improved_cv(session_id: str = Header(..., alias="X-Session-Id")):
-    """Tạo mô tả layout CV mới"""
+    """Tạo mô tả layout CV mới."""
     session_storage = load_session_state(session_id)
     try:
         result = generate_improved_cv_api(session_storage)
@@ -410,7 +423,7 @@ async def generate_improved_cv(session_id: str = Header(..., alias="X-Session-Id
 
 @app.get("/api/session-status")
 async def get_session_status(session_id: str = Header(..., alias="X-Session-Id")):
-    """Lấy trạng thái session hiện tại"""
+    """Lấy trạng thái session hiện tại."""
     session_storage = load_session_state(session_id)
     persist_session_state(session_id, session_storage)
 
@@ -423,7 +436,7 @@ async def get_session_status(session_id: str = Header(..., alias="X-Session-Id")
 
 @app.get("/api/get-cv-jd")
 async def get_cv_jd(session_id: str = Header(..., alias="X-Session-Id")):
-    """Lấy nội dung CV và JD đã lưu"""
+    """Lấy nội dung CV và JD đã lưu."""
     session_storage = load_session_state(session_id)
     persist_session_state(session_id, session_storage)
 
@@ -436,7 +449,7 @@ async def get_cv_jd(session_id: str = Header(..., alias="X-Session-Id")):
 
 @app.post("/api/clear-session")
 async def clear_session(session_id: str = Header(..., alias="X-Session-Id")):
-    """Xóa session"""
+    """Xóa session khi người dùng thoát hẳn."""
     clear_session_state(session_id)
     return {"success": True, "message": "Session cleared"}
 

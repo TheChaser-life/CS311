@@ -1,3 +1,4 @@
+// Điểm khởi đầu của ứng dụng React: mount App vào phần tử #root.
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'

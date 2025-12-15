@@ -1,15 +1,23 @@
 """
-Agent API - Version không dùng Streamlit
-Dành cho FastAPI Backend
+Agent API - Phiên bản backend (không dùng Streamlit).
+File này gom toàn bộ cấu trúc agent LangChain, tool và các hàm wrapper
+để FastAPI có thể gọi trực tiếp. Ý tưởng tổng quát:
+
+1. Khởi tạo ToolCallingAgentRunner bọc quanh ChatOpenAI với khả năng tool-calling.
+2. Định nghĩa danh sách tool (trích xuất văn bản, lưu session, phân tích kỹ năng, v.v.).
+3. Cung cấp các hàm API (analyze_cv_jd_api, chat_with_agent_api, ...) để backend sử dụng.
+
+Mọi comment trong file đều cố gắng giải thích chi tiết từng bước xử lý.
 """
 
-import os
-import sys
-import base64
-import re
-from typing import Any, Dict, List, Union
+import os  # Xác định đường dẫn thư mục hiện tại và .env
+import sys  # Điều chỉnh sys.path để import nội bộ khi chạy dưới dạng package
+import base64  # Mã hóa nhị phân sang base64 (dùng cho ảnh/PDF)
+import json  # Parse chuỗi JSON từ phản hồi của mô hình
+import re  # Sử dụng regex khi cần
+from typing import Any, Dict, List, Union  # Kiểu dữ liệu chú thích cho hàm/method
 
-# Add parent directory to path for imports
+# Bổ sung parent directory vào sys.path để import được modules khi chạy từ backend/.
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
@@ -26,11 +34,19 @@ from langchain_core.tools import tool
 from dotenv import load_dotenv
 from langchain_community.tools.tavily_search import TavilySearchResults
 
+# Nạp biến môi trường từ file .env ở project root (phục vụ OpenAI key, Tavily...).
 load_dotenv(os.path.join(os.path.dirname(current_dir), ".env"))
+
+# --- Cấu hình Agent & Tool layer ---
 
 
 class ToolCallingAgentRunner:
-    """Minimal agent runner supporting OpenAI tool-calling for backend usage."""
+    """
+    Đối tượng bao bọc quanh ChatOpenAI để:
+    - Tiêm system prompt.
+    - Duy trì danh sách tool và ánh xạ tên -> callable.
+    - Lặp liên tục cho đến khi mô hình dừng việc gọi tool và trả output cuối.
+    """
 
     def __init__(
         self,
@@ -39,27 +55,28 @@ class ToolCallingAgentRunner:
         system_message: str = "",
         verbose: bool = False,
     ) -> None:
-        self.llm = llm
-        self.llm_with_tools = llm.bind_tools(tools)
-        self.tool_map = {tool.name: tool for tool in tools}
-        self.system_message = system_message
-        self.verbose = verbose
+        self.llm = llm  # Lưu lại LLM gốc (không ràng buộc tool) nếu cần tái sử dụng.
+        self.llm_with_tools = llm.bind_tools(tools)  # Tạo phiên bản LLM có khả năng gọi tool.
+        self.tool_map = {tool.name: tool for tool in tools}  # Tạo map nhanh giúp truy xuất tool theo tên.
+        self.system_message = system_message  # Lưu system prompt để luôn gửi trước user prompt.
+        self.verbose = verbose  # Có thể bật log debug (chưa dùng hiện tại).
 
     def _format_history(
         self, history: Union[List[BaseMessage], None, List[Any]]
     ) -> List[BaseMessage]:
+        """Chuẩn hóa lịch sử hội thoại thành danh sách LangChain message."""
         if not history:
             return []
 
-        formatted: List[BaseMessage] = []
+        formatted: List[BaseMessage] = []  # Danh sách kết quả sau khi normalize.
         for item in history:
             if isinstance(item, BaseMessage):
-                formatted.append(item)
+                formatted.append(item)  # Nếu đã là message của LangChain thì giữ nguyên.
                 continue
 
             if isinstance(item, dict):
-                role = item.get("role") or item.get("type")
-                content = item.get("content", "")
+                role = item.get("role") or item.get("type")  # Các format custom có thể dùng 'role' hoặc 'type'.
+                content = item.get("content", "")  # Lấy nội dung text.
                 if role in ("human", "user"):
                     formatted.append(HumanMessage(content=str(content)))
                 elif role in ("ai", "assistant"):
@@ -76,28 +93,32 @@ class ToolCallingAgentRunner:
                 continue
 
             if isinstance(item, str):
-                formatted.append(HumanMessage(content=item))
+                formatted.append(HumanMessage(content=item))  # Chuỗi thuần được xem như lời người dùng.
 
         return formatted
 
     def invoke(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        user_input = inputs.get("input", "")
-        history = self._format_history(inputs.get("chat_history"))
+        """
+        Gửi prompt tới LLM, xử lý các tool call trả về và tiếp tục cho đến khi
+        model đưa ra câu trả lời cuối cùng.
+        """
+        user_input = inputs.get("input", "")  # Prompt chính mà caller cung cấp.
+        history = self._format_history(inputs.get("chat_history"))  # Chuẩn hóa lịch sử hội thoại.
 
-        messages: List[BaseMessage] = []
+        messages: List[BaseMessage] = []  # Danh sách message gửi cho openai.
         if self.system_message:
-            messages.append(SystemMessage(content=self.system_message))
+            messages.append(SystemMessage(content=self.system_message))  # Thêm system prompt nếu có.
 
-        messages.extend(history or [])
-        messages.append(HumanMessage(content=user_input))
+        messages.extend(history or [])  # Thêm các message lịch sử.
+        messages.append(HumanMessage(content=user_input))  # Thêm prompt hiện tại.
 
         while True:
-            response: AIMessage = self.llm_with_tools.invoke(messages)
-            messages.append(response)
+            response: AIMessage = self.llm_with_tools.invoke(messages)  # Gọi OpenAI (có khả năng tool-calling).
+            messages.append(response)  # Lưu lại phản hồi để loop tiếp (ghi nhận tool_call, output, ...).
 
-            tool_calls = getattr(response, "tool_calls", None) or []
+            tool_calls = getattr(response, "tool_calls", None) or []  # Lấy danh sách tool_call từ phản hồi.
             if not tool_calls:
-                return {"output": response.content, "messages": messages}
+                return {"output": response.content, "messages": messages}  # Nếu không có tool_call -> kết thúc.
 
             for tool_call in tool_calls:
                 tool_name = getattr(tool_call, "name", None) or getattr(
@@ -120,9 +141,9 @@ class ToolCallingAgentRunner:
                 tool_instance = self.tool_map.get(tool_name)
 
                 if not tool_instance:
-                    tool_output = f"ERROR: Tool '{tool_name}' không tồn tại."
+                    tool_output = f"ERROR: Tool '{tool_name}' không tồn tại."  # Sai tên tool -> thông báo lỗi.
                 else:
-                    tool_params = tool_args or {}
+                    tool_params = tool_args or {}  # Lấy argument (có thể là dict hoặc giá trị đơn).
                     if not isinstance(tool_params, dict):
                         args_schema = getattr(tool_instance, "args_schema", None)
                         if args_schema and hasattr(args_schema, "__fields__"):
@@ -135,7 +156,7 @@ class ToolCallingAgentRunner:
                             tool_params = {}
 
                     try:
-                        tool_output = tool_instance.invoke(tool_params)
+                        tool_output = tool_instance.invoke(tool_params)  # Chạy tool thực tế.
                     except Exception as exc:
                         tool_output = f"ERROR: {exc}"
 
@@ -144,33 +165,34 @@ class ToolCallingAgentRunner:
 
                 messages.append(
                     ToolMessage(content=tool_output, tool_call_id=tool_call_id or "")
-                )
+                )  # Đưa kết quả tool vào history để mô hình đọc được.
+            
 
-# Import tools with fallback
-calculate_similarity = None
-compare_skills_tool = None
-process_raw_text = None
+# --- Import tool phụ trợ (kèm fallback khi chạy trong bối cảnh khác) ---
+calculate_similarity = None  # Placeholder (được định nghĩa ngay trong file này).
+process_raw_text = None  # Sẽ được gán sau khi import tools_ocr.
 
+# Cố gắng ưu tiên import module theo relative path (khi chạy như package).
 try:
     from .tools_ocr import process_raw_text  # type: ignore
 except ImportError:
     try:
         from tools_ocr import process_raw_text  # type: ignore
     except ImportError as e:
-        print(f"⚠️ tools_ocr import error: {e}")
+        print(f"⚠️ tools_ocr import error: {e}")  # Ghi log cảnh báo nếu không tìm thấy module.
 
         def process_raw_text(text):
-            return text.strip() if text else ""
+            return text.strip() if text else ""  # Fallback đơn giản: chỉ strip khoảng trắng hai đầu.
     else:
-        print("✅ tools_ocr imported")
+        print("✅ tools_ocr imported")  # Log khi import thành công ở kiểu absolute.
 else:
-    print("✅ tools_ocr imported (package relative)")
+    print("✅ tools_ocr imported (package relative)")  # Log khi import thành công ở kiểu relative.
 
 # Use OpenAI for similarity calculation
 def calculate_similarity(cv_text, jd_text):
     """Tính điểm phù hợp CV-JD bằng GPT-4o"""
     try:
-        llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        llm = ChatOpenAI(model="gpt-4o", temperature=0)  # Khởi tạo model nhiệt độ 0 để kết quả ổn định.
         prompt = f"""Bạn là chuyên gia tuyển dụng. Hãy đánh giá mức độ phù hợp giữa CV và JD sau.
 
 CV:
@@ -188,12 +210,12 @@ Hãy CHỈ trả về MỘT SỐ từ 0.0 đến 1.0 (ví dụ: 0.75) thể hi�
 
 CHỈ TRẢ VỀ SỐ, KHÔNG THÊM GÌ KHÁC."""
         
-        response = llm.invoke([HumanMessage(content=prompt)])
-        score_text = response.content.strip()
+        response = llm.invoke([HumanMessage(content=prompt)])  # Gửi prompt dưới dạng HumanMessage.
+        score_text = response.content.strip()  # Lấy chuỗi kết quả (phải là số).
         
         # Parse score
-        import re
-        match = re.search(r'(\d+\.?\d*)', score_text)
+        import re  # Import tại chỗ để tránh phụ thuộc global.
+        match = re.search(r'(\d+\.?\d*)', score_text)  # Tìm số dạng float trong chuỗi.
         if match:
             score = float(match.group(1))
             return round(min(max(score, 0.0), 1.0), 4)
@@ -202,68 +224,29 @@ CHỈ TRẢ VỀ SỐ, KHÔNG THÊM GÌ KHÁC."""
         print(f"Similarity error: {e}")
         return 0.5
 
-print("✅ calculate_similarity using OpenAI GPT-4o")
 
-try:
-    from .tools_skills import compare_skills_tool  # type: ignore
-except ImportError:
-    try:
-        from tools_skills import compare_skills_tool  # type: ignore
-    except ImportError as e:
-        print(f"⚠️ tools_skills import error: {e}")
-
-        COMMON_SKILLS_DB = {
-            "python", "java", "c++", "javascript", "typescript", "react", "angular", "vue",
-            "django", "flask", "spring boot", "node.js", "tensorflow", "pytorch", "pandas",
-            "numpy", "scikit-learn", "git", "docker", "kubernetes", "aws", "azure", "mysql",
-            "postgresql", "mongodb", "machine learning", "deep learning", "nlp", "ai"
-        }
-
-        def compare_skills_tool(cv_text, jd_text):
-            cv_lower = cv_text.lower()
-            jd_lower = jd_text.lower()
-            cv_skills = set()
-            jd_skills = set()
-
-            for skill in COMMON_SKILLS_DB:
-                if re.search(r'\b' + re.escape(skill) + r'\b', cv_lower):
-                    cv_skills.add(skill)
-                if re.search(r'\b' + re.escape(skill) + r'\b', jd_lower):
-                    jd_skills.add(skill)
-
-            return {
-                "cv_skills": list(cv_skills),
-                "jd_skills": list(jd_skills),
-                "matched_skills": list(cv_skills.intersection(jd_skills)),
-                "missing_skills": list(jd_skills.difference(cv_skills))
-            }
-    else:
-        print("✅ tools_skills imported")
-else:
-    print("✅ tools_skills imported (package relative)")
-
-# Global storage reference (will be set by API)
-_session_storage = {}
+# Global storage reference (được gán mỗi request từ FastAPI).
+_session_storage = {}  # FastAPI sẽ truyền dict session để tools đọc và ghi.
 
 def set_session_storage(storage):
     global _session_storage
-    _session_storage = storage
+    _session_storage = storage  # Sử dụng trong trường hợp cần thay đổi storage runtime.
 
 # ===== TOOLS =====
 @tool
 def tool_extract_text_from_file(file_path: str) -> str:
     """Trích xuất văn bản từ file (PDF hoặc ảnh)."""
     try:
-        ext = file_path.lower().split('.')[-1]
+        ext = file_path.lower().split('.')[-1]  # Lấy đuôi file để quyết định xử lý.
         
         # Handle PDF with PyMuPDF
         if ext == 'pdf':
             try:
                 import fitz  # PyMuPDF
-                doc = fitz.open(file_path)
-                text_output = ""
+                doc = fitz.open(file_path)  # Mở file PDF.
+                text_output = ""  # Bộ đệm lưu text tổng.
                 for page in doc:
-                    text_output += page.get_text() + "\n"
+                    text_output += page.get_text() + "\n"  # Lấy text layer của từng trang.
                 doc.close()
                 
                 if text_output.strip():
@@ -278,12 +261,12 @@ def tool_extract_text_from_file(file_path: str) -> str:
         # Handle images with GPT-4o Vision
         else:
             with open(file_path, "rb") as f:
-                file_bytes = f.read()
-                base64_data = base64.b64encode(file_bytes).decode('utf-8')
+                file_bytes = f.read()  # Đọc toàn bộ bytes của ảnh.
+                base64_data = base64.b64encode(file_bytes).decode('utf-8')  # Chuyển sang base64 để gửi cho GPT-4o.
             
             mime_type = f"image/{ext}" if ext != 'jpg' else "image/jpeg"
             
-            vision_llm = ChatOpenAI(model="gpt-4o", temperature=0)
+            vision_llm = ChatOpenAI(model="gpt-4o", temperature=0)  # Dùng GPT-4o Vision.
             message = HumanMessage(
                 content=[
                     {
@@ -300,14 +283,14 @@ def tool_extract_text_from_file(file_path: str) -> str:
             return response.content
             
     except Exception as e:
-        return f"ERROR: Không thể đọc file - {str(e)}"
+        return f"ERROR: Không thể đọc file - {str(e)}"  # Thông báo lỗi chung nếu có vấn đề.
 
 
 @tool
 def tool_process_text_input(raw_text: str) -> str:
     """Làm sạch văn bản."""
     try:
-        return process_raw_text(raw_text)
+        return process_raw_text(raw_text)  # Gọi helper từ tools_ocr để normalize text.
     except Exception as e:
         return f"ERROR: {str(e)}"
 
@@ -316,7 +299,7 @@ def tool_process_text_input(raw_text: str) -> str:
 def tool_store_cv_text(cv_text: str) -> str:
     """Lưu CV text vào bộ nhớ."""
     global _session_storage
-    _session_storage["cv_text"] = cv_text
+    _session_storage["cv_text"] = cv_text  # Ghi lại để các tool khác (jobs, chat, skills) sử dụng.
     return f"SUCCESS: Đã lưu CV text ({len(cv_text)} ký tự)"
 
 
@@ -324,7 +307,7 @@ def tool_store_cv_text(cv_text: str) -> str:
 def tool_store_jd_text(jd_text: str) -> str:
     """Lưu JD text vào bộ nhớ."""
     global _session_storage
-    _session_storage["jd_text"] = jd_text
+    _session_storage["jd_text"] = jd_text  # Tương tự cho JD.
     return f"SUCCESS: Đã lưu JD text ({len(jd_text)} ký tự)"
 
 
@@ -338,8 +321,8 @@ def tool_calculate_match_score(dummy: str = "run") -> str:
     try:
         if not cv_text or not jd_text:
             return "ERROR: Chưa có CV hoặc JD text."
-        score = calculate_similarity(cv_text, jd_text)
-        return str(score)
+        score = calculate_similarity(cv_text, jd_text)  # Gọi helper GPT-4o để tính điểm.
+        return str(score)  # Trả về chuỗi để agent dễ chèn vào báo cáo.
     except Exception as e:
         return f"ERROR: {str(e)}"
 
@@ -348,10 +331,10 @@ def tool_calculate_match_score(dummy: str = "run") -> str:
 def tool_find_jobs_online(search_query: str) -> str:
     """Tìm kiếm việc làm trên mạng."""
     try:
-        search_tool = TavilySearchResults(max_results=5)
-        results = search_tool.invoke({"query": search_query})
+        search_tool = TavilySearchResults(max_results=5)  # Khởi tạo tool Tavily với giới hạn 5 kết quả.
+        results = search_tool.invoke({"query": search_query})  # Thực thi truy vấn tìm kiếm.
         
-        formatted_results = ""
+        formatted_results = ""  # Build chuỗi markdown để agent nhúng vào báo cáo.
         for item in results:
             formatted_results += f"- Tiêu đề: {item.get('content', 'No content')[:100]}...\n"
             formatted_results += f"  Link: {item.get('url')}\n\n"
@@ -371,12 +354,52 @@ def tool_analyze_skills(dummy: str = "run") -> str:
     try:
         if not cv_text or not jd_text:
             return "ERROR: Chưa có CV hoặc JD text."
-        
-        result = compare_skills_tool(cv_text, jd_text)
-        cv_skills = ", ".join(result.get('cv_skills', []))
-        missing_skills = ", ".join(result.get('missing_skills', []))
-        
-        return f"cv_skills: {cv_skills} ||| missing_skills: {missing_skills}"
+
+        llm = ChatOpenAI(model="gpt-4o", temperature=0)  # Dùng GPT-4o để suy luận kỹ năng.
+        prompt = (
+            "Bạn là chuyên gia tuyển dụng. Hãy phân tích CV của ứng viên so với mô tả "
+            "công việc (JD) và suy luận các nhóm kỹ năng quan trọng.\n"
+            "Trả về JSON với 4 mảng: cv_skills, jd_skills, matched_skills, missing_skills. "
+            "Mỗi mảng liệt kê tối đa 20 kỹ năng dạng cụm ngắn.\n"
+            "Quy tắc:\n"
+            "- cv_skills: kỹ năng ứng viên thể hiện rõ trong CV.\n"
+            "- jd_skills: kỹ năng/điều kiện cốt lõi JD yêu cầu.\n"
+            "- matched_skills: giao giữa hai danh sách (không phân biệt hoa thường).\n"
+            "- missing_skills: kỹ năng JD yêu cầu nhưng CV chưa chứng minh.\n"
+            "- Dùng định dạng chữ Title Case, tránh trùng lặp.\n"
+            "- CHỈ trả JSON, không thêm mô tả hoặc markdown.\n\n"
+            f"CV TEXT:\n{cv_text[:6000]}\n\n"
+            f"JOB DESCRIPTION:\n{jd_text[:6000]}"
+        )
+
+        response = llm.invoke([HumanMessage(content=prompt)])  # Prompt dưới dạng HumanMessage.
+        content = response.content.strip()  # Chuẩn hóa chuỗi trả về.
+
+        # Một số model có thể trả JSON nằm trong code block, tách ra nếu cần.
+        if content.startswith("```"):
+            content = content.strip("`")
+            if "\n" in content:
+                content = content.split("\n", 1)[1]
+
+        try:
+            parsed = json.loads(content)  # Cố gắng parse JSON nguyên vẹn.
+        except json.JSONDecodeError:
+            parsed = None
+
+        if isinstance(parsed, dict):
+            cv_skills = ", ".join(parsed.get("cv_skills", []))
+            jd_skills = ", ".join(parsed.get("jd_skills", []))
+            matched_skills = ", ".join(parsed.get("matched_skills", []))
+            missing_skills = ", ".join(parsed.get("missing_skills", []))
+            return (
+                f"cv_skills: {cv_skills} ||| "
+                f"jd_skills: {jd_skills} ||| "
+                f"matched_skills: {matched_skills} ||| "
+                f"missing_skills: {missing_skills}"
+            )
+
+        # Nếu không parse được JSON, trả về raw content để agent tự xử lý.
+        return content
     except Exception as e:
         return f"ERROR: {str(e)}"
 
@@ -385,7 +408,7 @@ def tool_analyze_skills(dummy: str = "run") -> str:
 def tool_suggest_jobs(dummy: str = "run") -> str:
     """Gợi ý việc làm phù hợp."""
     global _session_storage
-    cv_text = _session_storage.get("cv_text", "")
+    cv_text = _session_storage.get("cv_text", "")  # Chỉ cần CV để gọi Tavily.
     
     if not cv_text:
         return "ERROR: Chưa có CV."
@@ -430,7 +453,7 @@ OUTPUT FORMAT:
     
     try:
         response = vision_llm.invoke([HumanMessage(content=prompt)])
-        return response.content
+        return response.content  # Trả nguyên văn để frontend hiển thị markdown.
     except Exception as e:
         return f"ERROR: {str(e)}"
 
@@ -440,8 +463,8 @@ def tool_analyze_cv_layout(file_path: str) -> str:
     """Phân tích layout CV từ file ảnh."""
     try:
         with open(file_path, "rb") as f:
-            file_bytes = f.read()
-            base64_data = base64.b64encode(file_bytes).decode('utf-8')
+            file_bytes = f.read()  # Đọc nhị phân file đã upload.
+            base64_data = base64.b64encode(file_bytes).decode('utf-8')  # Encode base64 cho GPT-4o.
         
         ext = file_path.lower().split('.')[-1]
         if ext == 'pdf':
@@ -449,7 +472,7 @@ def tool_analyze_cv_layout(file_path: str) -> str:
         else:
             mime_type = f"image/{ext}" if ext != 'jpg' else "image/jpeg"
         
-        vision_llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        vision_llm = ChatOpenAI(model="gpt-4o", temperature=0)  # Vision mode đánh giá layout.
         
         analysis_prompt = """Bạn là chuyên gia đánh giá CV. Hãy PHÂN TÍCH CHI TIẾT LAYOUT/BỐ CỤC của CV này.
 
@@ -483,19 +506,19 @@ OUTPUT FORMAT:
         return response.content
         
     except Exception as e:
-        return f"ERROR: {str(e)}"
+        return f"ERROR: {str(e)}"  # Trả lỗi để agent hiển thị cho người dùng.
 
 
 @tool
 def tool_generate_improved_cv_image(dummy: str = "run") -> str:
     """Tạo mô tả layout CV mới."""
     global _session_storage
-    cv_text = _session_storage.get("cv_text", "")
+    cv_text = _session_storage.get("cv_text", "")  # Dựa vào nội dung CV hiện tại.
     
     if not cv_text:
         return "ERROR: Chưa có CV."
     
-    vision_llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+    vision_llm = ChatOpenAI(model="gpt-4o", temperature=0.3)  # Nhiệt độ cao hơn để đa dạng ý tưởng layout.
     
     prompt = f"""Dựa trên nội dung CV bên dưới, hãy tạo MÔ TẢ CHI TIẾT về một bản CV mới với LAYOUT CHUYÊN NGHIỆP.
 
@@ -516,14 +539,14 @@ TẠO MÔ TẢ VISUAL LAYOUT MỚI:
     
     try:
         response = vision_llm.invoke([HumanMessage(content=prompt)])
-        return response.content
+        return response.content  # Kết quả là đoạn mô tả chi tiết layout mới.
     except Exception as e:
         return f"ERROR: {str(e)}"
 
 
 def initialize_agent_api(verbose: bool = False) -> ToolCallingAgentRunner:
-    """Khởi tạo Agent cho API."""
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    """Khởi tạo agent với bộ tool tiêu chuẩn dùng chung cho mọi tác vụ."""
+    llm = ChatOpenAI(model="gpt-4o", temperature=0)  # Mặc định dùng GPT-4o và nhiệt độ 0.
 
     tools = [
         tool_extract_text_from_file,
@@ -561,13 +584,14 @@ def initialize_agent_api(verbose: bool = False) -> ToolCallingAgentRunner:
 
 
 # ===== API FUNCTIONS =====
+# Các hàm dưới đây được FastAPI gọi trực tiếp.
 
 def analyze_cv_jd_api(cv_input: str, jd_input: str, cv_type: str, jd_type: str, storage: dict) -> str:
     """API version of analyze_cv_jd"""
     global _session_storage
-    _session_storage = storage
+    _session_storage = storage  # Cho phép tool layer truy cập cùng session dict.
     
-    agent = initialize_agent_api()
+    agent = initialize_agent_api()  # Mỗi request tạo agent mới để tránh rò rỉ state.
     
     user_query = f"""
 Thực hiện phân tích CV-JD:
@@ -603,8 +627,8 @@ BƯỚC 6: VIẾT BÁO CÁO
 """
     
     try:
-        result = agent.invoke({"input": user_query, "chat_history": []})
-        return result['output']
+        result = agent.invoke({"input": user_query, "chat_history": []})  # Gửi prompt cho agent.
+        return result['output']  # Lấy phần output cuối.
     except Exception as e:
         return f"❌ Lỗi: {str(e)}"
 
@@ -612,7 +636,7 @@ BƯỚC 6: VIẾT BÁO CÁO
 def find_suitable_jobs_api(storage: dict) -> str:
     """API version of find_suitable_jobs"""
     global _session_storage
-    _session_storage = storage
+    _session_storage = storage  # Cho phép tool layer đọc CV/JD đã lưu.
     
     cv_content = storage.get("cv_text", "")
     jd_content = storage.get("jd_text", "")
@@ -647,11 +671,7 @@ YÊU CẦU OUTPUT:
 ### 1. [Tên Vị Trí] - [Công Ty]
    - 🔗 **Link:**
    - 📊 **Mức độ phù hợp:**
-   - 📞 **TRẠNG THÁI PHỎNG VẤN:** 🟢/🟡/🔴
-
-## 📋 TỔNG KẾT TRẠNG THÁI ỨNG TUYỂN
-| Vị Trí | Công Ty | Khả Năng PV | Ưu Tiên |
-|--------|---------|-------------|---------|
+   - 📞 **Khả năng trúng tuyển:** 🟢/🟡/🔴
 
 ## 💡 LỜI KHUYÊN CHUẨN BỊ PHỎNG VẤN
 """
@@ -666,7 +686,7 @@ YÊU CẦU OUTPUT:
 def chat_with_agent_api(user_message: str, storage: dict) -> str:
     """API version of chat_with_agent"""
     global _session_storage
-    _session_storage = storage
+    _session_storage = storage  # Đồng bộ session để tool đọc thông tin CV/JD.
     
     agent = initialize_agent_api()
     
@@ -709,7 +729,7 @@ CÂU HỎI MỚI:
 def suggest_cv_improvements_api(storage: dict) -> dict:
     """API version of suggest_cv_improvements"""
     global _session_storage
-    _session_storage = storage
+    _session_storage = storage  # Đồng bộ session cho layer tool.
     
     if not storage.get("cv_text"):
         return {"success": False, "output": "❌ Chưa có CV. Vui lòng phân tích CV trước!"}
@@ -751,7 +771,7 @@ def analyze_cv_layout_api(file_path: str) -> str:
 def generate_improved_cv_api(storage: dict) -> str:
     """API version of generate_improved_cv"""
     global _session_storage
-    _session_storage = storage
+    _session_storage = storage  # Đảm bảo tool sử dụng chung session dict.
     
     if not storage.get("cv_text"):
         return "❌ Chưa có CV. Vui lòng phân tích CV trước!"

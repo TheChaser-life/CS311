@@ -1,3 +1,6 @@
+// Ứng dụng React chính điều phối toàn bộ trải nghiệm Smart Resume Analyzer.
+// File này giữ state ở cấp cao nhất, định nghĩa từng tab tính năng và xử lý
+// việc giao tiếp với backend thông qua axios.
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -10,32 +13,13 @@ import { useDropzone } from 'react-dropzone';
 import toast, { Toaster } from 'react-hot-toast';
 import axios from 'axios';
 
-const resolveApiBase = () => {
-  const envBase = import.meta.env?.VITE_API_BASE;
-  if (envBase) {
-    return envBase;
-  }
+// Backend có thể được reverse proxy bằng Nginx nên mặc định sử dụng relative path.
+// Trường hợp build-time muốn override có thể truyền VITE_API_BASE, nếu không sẽ trả chuỗi rỗng.
+const resolveApiBase = () => import.meta.env?.VITE_API_BASE ?? '';
 
-  if (typeof window !== 'undefined') {
-    if (window.__API_BASE__) {
-      return window.__API_BASE__;
-    }
-
-    try {
-      const url = new URL(window.location.href);
-      url.port = '8000';
-      return url.origin;
-    } catch (error) {
-      console.warn('Falling back to default API base due to URL parse error', error);
-    }
-  }
-
-  return 'http://localhost:8000';
-};
-
-const API_BASE = resolveApiBase();
 const SESSION_STORAGE_KEY = 'resume_session_id';
 
+// Sinh sessionId lưu vào localStorage để backend bám theo Redis session tương ứng.
 const generateSessionId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -48,7 +32,7 @@ const generateSessionId = () => {
   ].join('-');
 };
 
-// Tab Configuration
+// Cấu hình các tab chính hiển thị trên navbar.
 const tabs = [
   { id: 'analyze', label: 'Phân Tích CV-JD', icon: FileText },
   { id: 'jobs', label: 'Tìm Việc Làm', icon: Search },
@@ -56,7 +40,8 @@ const tabs = [
   { id: 'chat', label: 'Chat AI', icon: MessageCircle },
 ];
 
-// Components
+// ========== UI HELPERS ==========
+// Spinner đơn giản dùng chung cho nhiều state loading.
 const LoadingDots = () => (
   <div className="loading-dots">
     <span></span>
@@ -65,6 +50,7 @@ const LoadingDots = () => (
   </div>
 );
 
+// Ô upload hỗ trợ kéo thả và hiển thị trạng thái file được chọn.
 const FileDropzone = ({ onDrop, label, accept }) => {
   const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
     onDrop,
@@ -98,6 +84,7 @@ const FileDropzone = ({ onDrop, label, accept }) => {
   );
 };
 
+// Tùy biến Markdown để các liên kết mở tab mới và giữ style thống nhất.
 const markdownComponents = {
   a: ({ node, ...props }) => (
     <a
@@ -109,6 +96,7 @@ const markdownComponents = {
   ),
 };
 
+// Bao bọc hiển thị kết quả dưới dạng thẻ, hỗ trợ trạng thái loading.
 const ResultCard = ({ result, loading }) => {
   if (loading) {
     return (
@@ -139,7 +127,7 @@ const ResultCard = ({ result, loading }) => {
   );
 };
 
-// Main Tabs
+// ========== TAB: PHÂN TÍCH CV so với JD ==========
 const AnalyzeTab = ({ state, setState, sessionReady }) => {
   const [cvFile, setCvFile] = useState(null);
   const [jdFile, setJdFile] = useState(null);
@@ -149,6 +137,7 @@ const AnalyzeTab = ({ state, setState, sessionReady }) => {
   const [jdMode, setJdMode] = useState('text');
   const { loading, result } = state;
 
+  // Gửi nội dung CV/JD (từ file hoặc text) lên backend để phân tích bằng agent.
   const handleAnalyze = async () => {
     if (!sessionReady) {
       toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
@@ -172,7 +161,7 @@ const AnalyzeTab = ({ state, setState, sessionReady }) => {
         formData.append('jd_text', jdText);
       }
 
-      const response = await axios.post(`${API_BASE}/api/analyze`, formData, {
+      const response = await axios.post('/api/analyze', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -308,9 +297,11 @@ const AnalyzeTab = ({ state, setState, sessionReady }) => {
   );
 };
 
+// ========== TAB: GỢI Ý VIỆC LÀM ==========
 const JobsTab = ({ state, setState, sessionReady }) => {
   const { loading, result } = state;
 
+  // Yêu cầu backend tìm danh sách việc làm dựa trên CV lưu trong session.
   const handleFindJobs = async () => {
     if (!sessionReady) {
       toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
@@ -320,7 +311,7 @@ const JobsTab = ({ state, setState, sessionReady }) => {
     setState(prev => ({ ...prev, loading: true, result: '' }));
     
     try {
-      const response = await axios.post(`${API_BASE}/api/find-jobs`);
+      const response = await axios.post('/api/find-jobs');
       
       if (response.data.success) {
         setState(prev => ({ ...prev, result: response.data.result }));
@@ -391,10 +382,12 @@ const JobsTab = ({ state, setState, sessionReady }) => {
   );
 };
 
+// ========== TAB: CẢI THIỆN CV ==========
 const ImproveTab = ({ state, setState, sessionReady }) => {
   const { loading, layoutLoading, result, layoutResult, docxWarning } = state;
   const [layoutFile, setLayoutFile] = useState(null);
 
+  // Gọi agent viết lại CV bằng tiếng Anh và trả về đề xuất cải thiện.
   const handleSuggestImprovements = async () => {
     if (!sessionReady) {
       toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
@@ -409,7 +402,7 @@ const ImproveTab = ({ state, setState, sessionReady }) => {
     }));
     
     try {
-      const response = await axios.post(`${API_BASE}/api/suggest-cv-improvements`);
+      const response = await axios.post('/api/suggest-cv-improvements');
       
       if (response.data.success) {
         setState(prev => ({ ...prev, result: response.data.result }));
@@ -429,6 +422,7 @@ const ImproveTab = ({ state, setState, sessionReady }) => {
     }
   };
 
+  // Upload ảnh/PDF CV để AI đánh giá bố cục hình ảnh.
   const handleAnalyzeLayout = async () => {
     if (!sessionReady) {
       toast.error('Đang khởi tạo phiên làm việc, vui lòng thử lại sau!');
@@ -446,7 +440,7 @@ const ImproveTab = ({ state, setState, sessionReady }) => {
       const formData = new FormData();
       formData.append('file', layoutFile);
 
-      const response = await axios.post(`${API_BASE}/api/analyze-cv-layout`, formData, {
+      const response = await axios.post('/api/analyze-cv-layout', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -519,10 +513,12 @@ const ImproveTab = ({ state, setState, sessionReady }) => {
   );
 };
 
+// ========== TAB: CHAT AI ==========
 const ChatTab = ({ state, setState, sessionReady }) => {
   const { messages, loading } = state;
   const [input, setInput] = useState('');
 
+  // Gửi câu hỏi tới backend và append kết quả vào lịch sử hội thoại.
   const sendMessage = async (text) => {
     if (!text.trim()) return;
     if (!sessionReady) {
@@ -536,7 +532,7 @@ const ChatTab = ({ state, setState, sessionReady }) => {
     setState(prev => ({ ...prev, loading: true }));
 
     try {
-      const response = await axios.post(`${API_BASE}/api/chat`, { message: text });
+      const response = await axios.post('/api/chat', { message: text });
       
       if (response.data.success) {
         const aiMessage = { role: 'assistant', content: response.data.result };
@@ -551,6 +547,7 @@ const ChatTab = ({ state, setState, sessionReady }) => {
     }
   };
 
+  // Các prompt nhanh giúp người dùng bắt đầu trò chuyện.
   const quickActions = [
     { label: 'Phân tích CV', prompt: 'Hãy phân tích CV của tôi một cách chi tiết' },
     { label: 'Cải thiện CV', prompt: 'Hãy đề xuất chỉnh sửa và viết lại CV của tôi' },
@@ -655,7 +652,8 @@ const ChatTab = ({ state, setState, sessionReady }) => {
   );
 };
 
-// Main App
+// ========== ỨNG DỤNG CHÍNH ==========
+// Quản lý state cho từng tab và thiết lập session/axios mặc định.
 export default function App() {
   const [activeTab, setActiveTab] = useState('analyze');
   const [analyzeState, setAnalyzeState] = useState({ loading: false, result: '' });
@@ -670,6 +668,7 @@ export default function App() {
   const [chatState, setChatState] = useState({ messages: [], loading: false });
   const [sessionReady, setSessionReady] = useState(false);
 
+  // Khởi tạo session id (lưu localStorage) và cấu hình axios base headers.
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
@@ -682,7 +681,9 @@ export default function App() {
         window.localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
       }
 
-      axios.defaults.baseURL = API_BASE;
+      const apiBase = resolveApiBase();
+      axios.defaults.baseURL = apiBase;
+      axios.defaults.withCredentials = false;
       axios.defaults.headers.common['X-Session-Id'] = sessionId;
       setSessionReady(true);
     } catch (error) {
@@ -691,6 +692,7 @@ export default function App() {
     }
   }, []);
 
+  // Render tab tương ứng với lựa chọn hiện tại.
   const renderTab = () => {
     switch (activeTab) {
       case 'analyze':
@@ -776,7 +778,7 @@ export default function App() {
             transition={{ delay: 0.3 }}
             className="text-slate-500 text-sm mt-2"
           >
-            by Võ Phước Thịnh, Liên Phúc Thịnh & Lê Ngọc Thanh Toàn
+            by Võ Phước Thịnh, Liên Phúc Thịnh 
           </motion.p>
         </div>
       </header>
@@ -828,7 +830,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm">
-        <p>Version 3.0 • Powered by GPT-4o & LangChain</p>
+        <p>Version 3.0 • Powered Friendship</p>
       </footer>
     </div>
   );
