@@ -6,6 +6,11 @@ services:
     image: redis:alpine
     restart: always
     command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   # 2. Backend: Build từ code mới nhất để test
   backend:
