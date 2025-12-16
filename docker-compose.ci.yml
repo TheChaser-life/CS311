@@ -4,13 +4,8 @@ services:
   # 1. Redis: Cần thiết để Backend lưu session khi chạy test
   redis_server:
     image: redis:alpine
-    ports:
-      - "6379:6379" # Map ra ngoài để script test có thể check kết nối nếu cần
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+    restart: always
+    command: redis-server --appendonly yes
 
   # 2. Backend: Build từ code mới nhất để test
   backend:
