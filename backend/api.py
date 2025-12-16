@@ -19,8 +19,6 @@ from redis.exceptions import RedisError
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
-
 # --- Redis cấu hình & session store ---
 # Ưu tiên REDIS_URL nếu tồn tại; fallback sang host/port rời rạc.
 REDIS_URL = os.getenv("REDIS_URL","redis://127.0.0.1:6379/0")
