@@ -21,7 +21,9 @@
     "framer-motion": "^10.16.5",
     "lucide-react": "^0.294.0",
     "react-hot-toast": "^2.4.1",
-    "prop-types": "^15.8.1"
+    "prop-types": "^15.8.1",
+    "file-selector": "^2.1.0", 
+    "attr-accept": "^2.2.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
