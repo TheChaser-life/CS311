@@ -25,6 +25,7 @@ jobs:
         run: |
           cd frontend
           npm install
+          chmod +x node_modules/.bin/vite  
           npm run build
       
       - name: Stop Containers
