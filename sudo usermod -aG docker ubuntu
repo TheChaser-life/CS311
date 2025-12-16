@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 1. Redis: Cần thiết để Backend lưu session khi chạy test
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379" # Map ra ngoài để script test có thể check kết nối nếu cần
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 2. Backend: Build từ code mới nhất để test
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8000" # Map cổng 8000 của uvicorn ra 8080 của máy Runner
+    environment:
+      # Cấu hình kết nối Redis nội bộ trong mạng Docker
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      
+      # QUAN TRỌNG: Để trống giá trị để Docker tự lấy từ biến môi trường của GitHub Runner
+      # (Được truyền vào từ step "env:" trong file YAML workflow)
+      - OPENAI_API_KEY
+      - TAVILY_API_KEY
+    depends_on:
+      redis:
+        condition: service_healthy # Chỉ start backend khi Redis đã sẵn sàng
+
+  # 3. Frontend: Build để đảm bảo code React không bị lỗi cú pháp
+  frontend:
+    build:
+      context: ./frontend
+      # Lưu ý: Dockerfile này là phiên bản đã sửa dùng Nginx ở bước trước
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80" # Map cổng 80 của Nginx ra cổng 3000 của máy Runner
+    depends_on:
+      - backend
