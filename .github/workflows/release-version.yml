@@ -1,0 +1,31 @@
+name: 3. Official Release Tag
+
+on:
+  push:
+    tags:
+      - 'v*' # Chạy khi có tag bắt đầu bằng v (vd: v1.0, v2.1)
+
+jobs:
+  tag-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: registry.thinhopsops.win
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      # Build lại từ chính commit được gắn tag v1.0 để đảm bảo tính toàn vẹn
+      # Và push lên Harbor với tag v1.0.0
+      - name: Build & Push Release Version
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            registry.thinhopsops.win/resume/backend:${{ github.ref_name }}
+            registry.thinhopsops.win/resume/backend:latest
