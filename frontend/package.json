@@ -23,7 +23,8 @@
     "react-hot-toast": "^2.4.1",
     "prop-types": "^15.8.1",
     "file-selector": "^2.1.0", 
-    "attr-accept": "^2.2.2"
+    "attr-accept": "^2.2.2",
+    "goober": "^2.1.10"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
