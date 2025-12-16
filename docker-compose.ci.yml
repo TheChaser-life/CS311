@@ -29,7 +29,7 @@ services:
       - OPENAI_API_KEY
       - TAVILY_API_KEY
     depends_on:
-      redis:
+      redis_server:
         condition: service_healthy # Chỉ start backend khi Redis đã sẵn sàng
 
   # 3. Frontend: Build để đảm bảo code React không bị lỗi cú pháp
