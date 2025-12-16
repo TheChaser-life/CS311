@@ -1,0 +1,29 @@
+name: 4. Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      restore_tag:
+        description: 'Nhập Tag muốn quay về (VD: v1.0)'
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback Production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/app
+            
+            # Đổi về tag cũ
+            echo "TAG=${{ inputs.restore_tag }}" > .env
+            
+            echo "Đang Rollback về phiên bản: ${{ inputs.restore_tag }}"
+            
+            docker compose pull backend
+            docker compose up -d backend
