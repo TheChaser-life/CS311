@@ -29,3 +29,12 @@ jobs:
           tags: |
             registry.thinhopsops.win/resume/backend:${{ github.ref_name }}
             registry.thinhopsops.win/resume/backend:latest
+
+      - name: Build & Push Frontend Release
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            registry.thinhopsops.win/resume/frontend:${{ github.ref_name }}
+            registry.thinhopsops.win/resume/frontend:latest
