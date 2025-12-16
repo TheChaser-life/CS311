@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # 1. Redis: Cần thiết để Backend lưu session khi chạy test
-  redis_server:
+  redis:
     image: redis:alpine
     restart: always
     command: redis-server --appendonly yes
@@ -21,7 +21,7 @@ services:
       - "8080:8000" # Map cổng 8000 của uvicorn ra 8080 của máy Runner
     environment:
       # Cấu hình kết nối Redis nội bộ trong mạng Docker
-      - REDIS_HOST=redis_server
+      - REDIS_HOST=redis
       - REDIS_PORT=6379
       
       # QUAN TRỌNG: Để trống giá trị để Docker tự lấy từ biến môi trường của GitHub Runner
@@ -29,7 +29,7 @@ services:
       - OPENAI_API_KEY
       - TAVILY_API_KEY
     depends_on:
-      redis_server:
+      redis:
         condition: service_healthy # Chỉ start backend khi Redis đã sẵn sàng
 
   # 3. Frontend: Build để đảm bảo code React không bị lỗi cú pháp
