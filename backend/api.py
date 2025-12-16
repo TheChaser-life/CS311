@@ -184,7 +184,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "openai_key": bool(os.getenv("OPENAI_API_KEY"))}
+    return {"status": "healthy"}
 
 
 @app.post("/api/analyze")
