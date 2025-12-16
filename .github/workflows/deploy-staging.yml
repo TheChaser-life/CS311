@@ -1,8 +1,13 @@
 name: 2. CI & Deploy Staging
 
 on:
-  push:
-    branches: [ "main" ] # Chỉ chạy khi code được merge vào nhánh main
+  workflow_dispatch: # Kích hoạt bằng nút bấm
+    inputs:
+      build_tag:
+        description: 'Nhập Tag muốn deploy'
+        required: false
+        default: 'staging'
+        type: string
 
 jobs:
   build-test-deploy:
