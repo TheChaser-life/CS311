@@ -25,5 +25,5 @@ jobs:
             
             echo "Đang Rollback về phiên bản: ${{ inputs.restore_tag }}"
             
-            docker compose pull backend
-            docker compose up -d backend
+            docker compose pull 
+            docker compose up -d --remove-orphans
