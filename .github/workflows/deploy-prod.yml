@@ -1,0 +1,34 @@
+name: 2. Deploy Production (Manual)
+
+on:
+  workflow_dispatch: # Kích hoạt bằng tay
+    inputs:
+      build_tag:
+        description: 'Nhập Tag Build muốn deploy (VD: v0.1)'
+        required: true
+        default: 'build-...'
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment: Production # (Tùy chọn) Thêm lớp bảo vệ Approve trên GitHub
+    
+    steps:
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST_PROD }} # IP server Chính
+          username: ${{ secrets.SSH_USER_PROD }}
+          key: ${{ secrets.SSH_KEY_PROD }}
+          script: |
+            cd /home/app
+            
+            # QUAN TRỌNG: Server chính chạy đúng cái tag build-xxx mà bạn nhập
+            # Điều này đảm bảo code trên Prod CHÍNH XÁC LÀ CODE ĐÃ TEST ở Staging
+            echo "TAG=${{ inputs.build_tag }}" > .env
+            
+            echo "Deploying: ${{ inputs.build_tag }}"
+            
+            echo ${{ secrets.HARBOR_PASSWORD }} | docker login registry.thinhopsops.win -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
+            docker compose pull backend
+            docker compose up -d backend
