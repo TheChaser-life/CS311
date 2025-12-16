@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # 1. Redis: Cần thiết để Backend lưu session khi chạy test
-  redis:
+  redis_server:
     image: redis:alpine
     ports:
       - "6379:6379" # Map ra ngoài để script test có thể check kết nối nếu cần
@@ -21,7 +21,7 @@ services:
       - "8080:8000" # Map cổng 8000 của uvicorn ra 8080 của máy Runner
     environment:
       # Cấu hình kết nối Redis nội bộ trong mạng Docker
-      - REDIS_HOST=redis
+      - REDIS_HOST=redis_server
       - REDIS_PORT=6379
       
       # QUAN TRỌNG: Để trống giá trị để Docker tự lấy từ biến môi trường của GitHub Runner
