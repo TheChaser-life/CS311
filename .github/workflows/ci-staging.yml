@@ -41,6 +41,11 @@ jobs:
           docker compose -f docker-compose.ci.yml logs frontend
       
       # --- BUILD & PUSH PHASE ---
+      - name: Configure Docker for Insecure Registry
+        run: |
+          echo '{"insecure-registries": ["registry.thinhopsops.win"]}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+      
       - name: Login to Harbor
         uses: docker/login-action@v3
         with:
