@@ -56,22 +56,3 @@ jobs:
           push: true
           tags: |
             registry.thinhopsops.win/resume/frontend:staging
-
-      # --- DEPLOY STAGING ---
-      - name: Deploy to Staging
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          # ... (các thông tin SSH giữ nguyên)
-          script: |
-            cd /home/app
-            echo "TAG=staging" > .env
-            
-            # Login lại
-            echo ${{ secrets.HARBOR_PASSWORD }} | docker login registry.thinhopsops.win -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
-            
-            # Pull cả 2 service (Frontend + Backend)
-            docker compose pull
-            
-            # Restart cả 2
-            docker compose up -d
-    
