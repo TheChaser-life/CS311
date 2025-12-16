@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+.env.local
+package-lock.json
+*.log
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt

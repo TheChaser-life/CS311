@@ -23,8 +23,8 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 # --- Redis cấu hình & session store ---
 # Ưu tiên REDIS_URL nếu tồn tại; fallback sang host/port rời rạc.
-REDIS_URL = os.getenv("REDIS_URL")
-REDIS_HOST = os.getenv("REDIS_HOST", "192.168.200.99") # tên host/IP Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
+REDIS_URL = os.getenv("REDIS_URL","redis://127.0.0.1:6379/0")
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1") # tên host/IP Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379")) # port Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
 REDIS_DB = int(os.getenv("REDIS_DB", "0")) # database Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD") # password Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
