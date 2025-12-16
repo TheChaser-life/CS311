@@ -17,7 +17,7 @@ jobs:
         run: |
           docker compose -f docker-compose.ci.yml up -d --build --force-recreate
           sleep 60
-          curl --fail http://localhost:8080/api/health || exit 1
+          curl --fail http://localhost:8080/health || exit 1
       
       # Test Frontend: Chỉ cần kiểm tra xem có Build được code React không
       # (Nếu code lỗi cú pháp, bước này sẽ fail và dừng quy trình)
