@@ -2,7 +2,7 @@
 
 **Phân tích CV thông minh với AI | Tìm việc làm | Cải thiện CV**
 
-Phát triển bởi: **Võ Phước Thịnh, Liên Phúc Thịnh & Lê Ngọc Thanh Toàn** - The Unwithering Trio
+Phát triển bởi: **Võ Phước Thịnh, Liên Phúc Thịnh**
 
 ---
 
