@@ -1,0 +1,77 @@
+name: 1. CI & Deploy Staging
+
+on:
+  push:
+     branches: ["main"]
+
+jobs:
+  test-build-deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # --- TEST PHASE ---
+      # Test Backend (Giữ nguyên)
+      - name: Start Containers & Test Backend
+        run: |
+          docker compose -f docker-compose.ci.yml up -d --build
+          sleep 20
+          curl --fail http://localhost:8080/api/health || exit 1
+      
+      # Test Frontend: Chỉ cần kiểm tra xem có Build được code React không
+      # (Nếu code lỗi cú pháp, bước này sẽ fail và dừng quy trình)
+      - name: Test Frontend Build
+        run: |
+          cd frontend
+          npm install
+          npm run build
+      
+      - name: Stop Containers
+        run: docker compose -f docker-compose.ci.yml down
+
+      # --- BUILD & PUSH PHASE ---
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: registry.thinhopsops.win
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      # 1. Build Backend (Giữ nguyên)
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            registry.thinhopsops.win/resume/backend:staging
+
+      # 2. Build Frontend (THÊM MỚI)
+      # Lưu ý: Dùng chung tag 'staging' và 'build-xxx' để đồng bộ với backend
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            registry.thinhopsops.win/resume/frontend:staging
+
+      # --- DEPLOY STAGING ---
+      - name: Deploy to Staging
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          # ... (các thông tin SSH giữ nguyên)
+          script: |
+            cd /home/app
+            echo "TAG=staging" > .env
+            
+            # Login lại
+            echo ${{ secrets.HARBOR_PASSWORD }} | docker login registry.thinhopsops.win -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
+            
+            # Pull cả 2 service (Frontend + Backend)
+            docker compose pull
+            
+            # Restart cả 2
+            docker compose up -d
+    
