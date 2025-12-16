@@ -15,7 +15,7 @@ jobs:
       # Test Backend (Giữ nguyên)
       - name: Start Containers & Test Backend
         run: |
-          docker compose -f docker-compose.ci.yml up -d --build
+          docker compose -f docker-compose.ci.yml up -d --build --force-recreate
           sleep 60
           curl --fail http://localhost:8080/api/health || exit 1
       
