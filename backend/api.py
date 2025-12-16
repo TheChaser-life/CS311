@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # --- Redis cấu hình & session store ---
 # Ưu tiên REDIS_URL nếu tồn tại; fallback sang host/port rời rạc.
-REDIS_URL = os.getenv("REDIS_URL","redis://127.0.0.1:6379/0")
-REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1") # tên host/IP Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
+REDIS_URL = os.getenv("REDIS_URL","redis://redis:6379/0")
+REDIS_HOST = os.getenv("REDIS_HOST", "redis") # tên host/IP Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379")) # port Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
 REDIS_DB = int(os.getenv("REDIS_DB", "0")) # database Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD") # password Redis nội bộ, khi deploy cần override để trỏ đúng container/máy
