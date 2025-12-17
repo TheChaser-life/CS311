@@ -25,7 +25,7 @@ jobs:
             
             # QUAN TRỌNG: Server chính chạy đúng cái tag build-xxx mà bạn nhập
             # Điều này đảm bảo code trên Prod CHÍNH XÁC LÀ CODE ĐÃ TEST ở Staging
-            echo "TAG=${{ inputs.build_tag }}" > .env
+            echo "TAG=${{ inputs.build_tag }}" >> .env
             
             echo "Deploying: ${{ inputs.build_tag }}"
             
