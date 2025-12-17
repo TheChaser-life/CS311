@@ -830,7 +830,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm">
-        <p>Version 3.0 • Powered Friendship</p>
+        <p>Version 0.2 • Powered by Friendship</p>
       </footer>
     </div>
   );
