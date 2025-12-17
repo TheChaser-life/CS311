@@ -1,4 +1,4 @@
-name: 2. CI & Deploy Staging
+name: 2. Deploy Staging
 
 on:
   workflow_dispatch: # Kích hoạt bằng nút bấm
