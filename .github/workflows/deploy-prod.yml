@@ -30,5 +30,6 @@ jobs:
             echo "Deploying: ${{ inputs.build_tag }}"
             
             echo ${{ secrets.HARBOR_PASSWORD }} | docker login registry.thinhopsops.win -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
-            docker compose pull 
-            docker compose up -d --remove-orphans
+            docker compose pull
+            docker compose down
+            docker compose up -d 
