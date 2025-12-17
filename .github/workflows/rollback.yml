@@ -21,7 +21,7 @@ jobs:
             cd /home/app
             
             # Đổi về tag cũ
-            echo "TAG=${{ inputs.restore_tag }}" > .env
+            echo "TAG=${{ inputs.restore_tag }}" >> .env
             
             echo "Đang Rollback về phiên bản: ${{ inputs.restore_tag }}"
             
