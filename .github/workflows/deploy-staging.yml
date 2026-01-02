@@ -1,7 +1,7 @@
 name: 2. Deploy Staging
 
 on:
-  workflow_dispatch: # Kích hoạt bằng nút bấm
+  workflow_dispatch:
     inputs:
       build_tag:
         description: 'Nhập Tag muốn deploy'
@@ -13,29 +13,61 @@ jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1. Cấu hình AWS Credentials trên Runner để lấy token đăng nhập
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 2. Login ECR trên Runner để lấy Registry URL
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 3. Lấy mật khẩu đăng nhập ECR (Token tạm thời)
+      - name: Get ECR Password
+        id: ecr-password
+        run: |
+          echo "password=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})" >> $GITHUB_OUTPUT
+
+      # 4. SSH vào Server và Deploy
       - name: Deploy to Staging Server
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          # Truyền các biến này từ Runner sang Server qua SSH
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_PASSWORD: ${{ steps.ecr-password.outputs.password }}
+          BUILD_TAG: ${{ inputs.build_tag || 'staging' }}
         with:
-          host: ${{ secrets.SSH_HOST_STAGING }} # IP của server Staging
-          username: ${{ secrets.SSH_USER_STAGING }}       # User (vd: root, ubuntu)
-          key: ${{ secrets.SSH_KEY_STAGING }}             # Private Key
+          host: ${{ secrets.SSH_HOST_STAGING }}
+          username: ${{ secrets.SSH_USER_STAGING }}
+          key: ${{ secrets.SSH_KEY_STAGING }}
+          # Khai báo các biến môi trường sẽ được inject vào script bên dưới
+          envs: ECR_REGISTRY,ECR_PASSWORD,BUILD_TAG
           script: |
-            # 1. Đi vào thư mục chứa docker-compose.yml
+            # 1. Đi vào thư mục chứa code
             cd /home/app
             
-            # 2. Cập nhật biến môi trường để dùng tag 'staging'
-            # (Lưu ý: Bạn phải xóa dòng TAG=... cũ đi trước khi ghi mới để tránh lỗi trùng lặp)
+            # 2. Cập nhật file .env
+            # Xóa dòng cũ và ghi dòng mới cho TAG
             sed -i '/^TAG=/d' .env || true
-            echo "TAG=staging" >> .env
+            echo "TAG=$BUILD_TAG" >> .env
             
-            # 3. Đăng nhập lại Harbor trên server (đề phòng hết session)
-            echo ${{ secrets.HARBOR_PASSWORD }} | docker login registry.thinhopsops.win -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
+            # Xóa dòng cũ và ghi dòng mới cho REGISTRY_URL (Quan trọng để docker-compose biết pull ở đâu)
+            sed -i '/^REGISTRY_URL=/d' .env || true
+            echo "REGISTRY_URL=$ECR_REGISTRY" >> .env
             
-            # 4. Tải image mới nhất về (cả Frontend và Backend)
+            # 3. Đăng nhập ECR bằng mật khẩu được truyền từ GitHub sang
+            # Lưu ý: -u AWS là bắt buộc đối với ECR
+            echo "$ECR_PASSWORD" | docker login -u AWS --password-stdin "$ECR_REGISTRY"
+            
+            # 4. Tải image mới nhất về
             docker compose pull
             
-            # 5. Khởi động lại (Chỉ container nào có image mới mới bị restart)
+            # 5. Khởi động lại
             docker compose up -d --remove-orphans
             
-            # 6. Dọn dẹp image cũ cho sạch ổ cứng
+            # 6. Dọn dẹp image cũ
             docker image prune -f
