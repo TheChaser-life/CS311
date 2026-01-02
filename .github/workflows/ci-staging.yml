@@ -2,7 +2,7 @@ name: 1. CI
 
 on:
   push:
-     branches: ["main"]
+    branches: ["main"]
 
 jobs:
   test-build-deploy-staging:
@@ -11,16 +11,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # --- TEST PHASE ---
-      # Test Backend (Giữ nguyên)
+      # --- TEST PHASE (Giữ nguyên) ---
       - name: Start Containers & Test Backend
         run: |
           docker compose -f docker-compose.ci.yml up -d --build --force-recreate
           sleep 60
           curl --fail http://localhost:8080/health || exit 1
       
-      # Test Frontend: Chỉ cần kiểm tra xem có Build được code React không
-      # (Nếu code lỗi cú pháp, bước này sẽ fail và dừng quy trình)
       - name: Test Frontend Build
         run: |
           cd frontend
@@ -32,7 +29,7 @@ jobs:
         run: docker compose -f docker-compose.ci.yml down
 
       - name: Debug Container Logs
-        if: failure() # Chỉ chạy khi bước trên bị lỗi
+        if: failure()
         run: |
           echo "=== LOG BACKEND ==="
           docker compose -f docker-compose.ci.yml logs backend
@@ -40,34 +37,38 @@ jobs:
           echo "=== LOG FRONTEND ==="
           docker compose -f docker-compose.ci.yml logs frontend
       
-      # --- BUILD & PUSH PHASE ---
-      - name: Configure Docker for Insecure Registry
-        run: |
-          echo '{"insecure-registries": ["registry.thinhopsops.win"]}' | sudo tee /etc/docker/daemon.json
-          sudo service docker restart
+      # --- BUILD & PUSH PHASE (Thay đổi cho AWS ECR) ---
       
-      - name: Login to Harbor
-        uses: docker/login-action@v3
+      # 1. Cấu hình credentials AWS để có quyền truy cập
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          registry: registry.thinhopsops.win
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_PASSWORD }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # 1. Build Backend (Giữ nguyên)
+      # 2. Đăng nhập vào ECR (Bước này sẽ output ra registry URL)
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 3. Build & Push Backend
       - name: Build & Push Backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
+          # ${{ steps.login-ecr.outputs.registry }} sẽ tự động lấy URL ECR của bạn
           tags: |
-            registry.thinhopsops.win/resume/backend:staging
+            ${{ steps.login-ecr.outputs.registry }}/resume/backend:staging
+            ${{ steps.login-ecr.outputs.registry }}/resume/backend:${{ github.sha }}
 
-      # 2. Build Frontend (THÊM MỚI)
-      # Lưu ý: Dùng chung tag 'staging' và 'build-xxx' để đồng bộ với backend
+      # 4. Build & Push Frontend
       - name: Build & Push Frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
           tags: |
-            registry.thinhopsops.win/resume/frontend:staging
+            ${{ steps.login-ecr.outputs.registry }}/resume/frontend:staging
+            ${{ steps.login-ecr.outputs.registry }}/resume/frontend:${{ github.sha }}
