@@ -67,7 +67,7 @@ jobs:
             docker compose pull
             
             # 5. Khởi động lại
-            docker compose up -d --remove-orphans
+            docker compose up -d --remove-orphans --force-recreate
             
             # 6. Dọn dẹp image cũ
             docker image prune -f
