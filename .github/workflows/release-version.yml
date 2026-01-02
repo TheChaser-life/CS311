@@ -12,34 +12,36 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure Docker for Insecure Registry
-        run: |
-          echo '{"insecure-registries": ["registry.thinhopsops.win"]}' | sudo tee /etc/docker/daemon.json
-          sudo service docker restart
-      
-      - name: Login to Harbor
-        uses: docker/login-action@v3
+      # 1. Cấu hình AWS Credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          registry: registry.thinhopsops.win
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_PASSWORD }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # Build lại từ chính commit được gắn tag v1.0 để đảm bảo tính toàn vẹn
-      # Và push lên Harbor với tag v1.0.0
-      - name: Build & Push Release Version
+      # 2. Login ECR (Lấy Registry URL)
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 3. Build & Push Backend
+      # Tag theo tên release (vd: v1.0) VÀ tag 'latest'
+      - name: Build & Push Release Version (Backend)
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
           tags: |
-            registry.thinhopsops.win/resume/backend:${{ github.ref_name }}
-            registry.thinhopsops.win/resume/backend:latest
+            ${{ steps.login-ecr.outputs.registry }}/resume/backend:${{ github.ref_name }}
+            ${{ steps.login-ecr.outputs.registry }}/resume/backend:latest
 
+      # 4. Build & Push Frontend
       - name: Build & Push Frontend Release
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
           tags: |
-            registry.thinhopsops.win/resume/frontend:${{ github.ref_name }}
-            registry.thinhopsops.win/resume/frontend:latest
+            ${{ steps.login-ecr.outputs.registry }}/resume/frontend:${{ github.ref_name }}
+            ${{ steps.login-ecr.outputs.registry }}/resume/frontend:latest
