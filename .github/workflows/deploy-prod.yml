@@ -4,33 +4,70 @@ on:
   workflow_dispatch: # Kích hoạt bằng tay
     inputs:
       build_tag:
-        description: 'Nhập Tag Build muốn deploy (VD: v0.1)'
+        description: 'Nhập Tag Build muốn deploy (VD: v1.0.0)'
         required: true
-        default: 'build-...'
+        default: 'latest'
 
 jobs:
   deploy-prod:
     runs-on: ubuntu-latest
-    environment: Production # (Tùy chọn) Thêm lớp bảo vệ Approve trên GitHub
+    environment: Production # Giữ nguyên môi trường để có tính năng Approval (nếu đã bật)
     
     steps:
+      # 1. Cấu hình AWS Credentials trên Runner
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 2. Login ECR & Lấy mật khẩu đăng nhập tạm thời
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get ECR Password
+        id: ecr-password
+        run: |
+          echo "password=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})" >> $GITHUB_OUTPUT
+
+      # 3. SSH vào Production và Deploy
       - name: Deploy to Production Server
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_PASSWORD: ${{ steps.ecr-password.outputs.password }}
+          BUILD_TAG: ${{ inputs.build_tag }}
         with:
           host: ${{ secrets.SSH_HOST_PROD }} # IP server Chính
           username: ${{ secrets.SSH_USER_PROD }}
           key: ${{ secrets.SSH_KEY_PROD }}
+          envs: ECR_REGISTRY,ECR_PASSWORD,BUILD_TAG
           script: |
+            # 1. Vào thư mục
             cd /home/app
             
-            # QUAN TRỌNG: Server chính chạy đúng cái tag build-xxx mà bạn nhập
-            # Điều này đảm bảo code trên Prod CHÍNH XÁC LÀ CODE ĐÃ TEST ở Staging
-            echo "TAG=${{ inputs.build_tag }}" >> .env
+            echo "--- Deploying Tag: $BUILD_TAG ---"
+
+            # 2. Cập nhật file .env (Dùng sudo để tránh lỗi Permission denied như Staging)
+            # Xóa dòng cũ
+            sed -i '/^TAG=/d' .env || true
+            sed -i '/^REGISTRY_URL=/d' .env || true
             
-            echo "Deploying: ${{ inputs.build_tag }}"
+            # Ghi dòng mới
+            echo "TAG=$BUILD_TAG" >> .env
+            echo "REGISTRY_URL=$ECR_REGISTRY" >> .env
             
-            echo ${{ secrets.HARBOR_PASSWORD }} | docker login registry.thinhopsops.win -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
+            # 3. Đăng nhập ECR bằng mật khẩu truyền từ GitHub
+            echo "$ECR_PASSWORD" | docker login -u AWS --password-stdin "$ECR_REGISTRY"
+            
+            # 4. Deploy
             docker compose pull
+            
+            # Restart sạch sẽ (Down -> Up) để đảm bảo config mới nhất
             docker compose down
-            docker compose up -d 
+            docker compose up -d
+            
+            # Dọn dẹp
             docker image prune -f
