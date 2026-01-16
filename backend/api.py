@@ -9,12 +9,13 @@ import tempfile
 import base64
 import json
 from typing import Optional
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Header
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Header, Cookie, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import redis
 from redis.exceptions import RedisError
+import uuid
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -154,9 +155,17 @@ app = FastAPI(
 )
 
 # Cho phép frontend (Vite dev server, build, v.v.) gọi API mà không bị chặn CORS.
+# LƯU Ý: Khi dùng credentials (Cookie), allow_origins KHÔNG ĐƯỢC LÀ "*"
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -187,13 +196,36 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.post("/api/init-session")
+async def init_session(response: Response, session_id: Optional[str] = Cookie(None)):
+    """Khởi tạo session mới nếu chưa có."""
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        # Set cookie HttpOnly
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            samesite="lax",
+            secure=False, # Set True nếu chạy HTTPS
+            max_age=SESSION_TTL_SECONDS
+        )
+    return {"success": True, "message": "Session initialized", "session_id": "hidden"}
+
+# Hàm tiện ích để lấy session ID từ cookie hoặc báo lỗi
+def get_session_id(session_id: Optional[str] = Cookie(None)):
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Session cookie missing")
+    return session_id
+
+
 @app.post("/api/analyze")
 async def analyze_cv_jd(
     cv_file: Optional[UploadFile] = File(None),
     jd_file: Optional[UploadFile] = File(None),
     cv_text: Optional[str] = Form(None),
     jd_text: Optional[str] = Form(None),
-    session_id: str = Header(..., alias="X-Session-Id"),
+    session_id: str = Depends(get_session_id),
 ):
     """Phân tích CV và JD."""
     session_storage = load_session_state(session_id)
@@ -270,7 +302,7 @@ async def analyze_cv_jd(
 
 
 @app.post("/api/find-jobs")
-async def find_jobs(session_id: str = Header(..., alias="X-Session-Id")):
+async def find_jobs(session_id: str = Depends(get_session_id)):
     """Tìm việc làm phù hợp với CV đã lưu."""
     session_storage = load_session_state(session_id)
     try:
@@ -294,7 +326,7 @@ async def find_jobs(session_id: str = Header(..., alias="X-Session-Id")):
 @app.post("/api/chat")
 async def chat(
     input_data: ChatInput,
-    session_id: str = Header(..., alias="X-Session-Id"),
+    session_id: str = Depends(get_session_id),
 ):
     """Chat với AI Assistant."""
     session_storage = load_session_state(session_id)
@@ -318,7 +350,7 @@ async def chat(
 
 @app.post("/api/suggest-cv-improvements")
 async def suggest_cv_improvements(
-    session_id: str = Header(..., alias="X-Session-Id"),
+    session_id: str = Depends(get_session_id),
 ):
     """Đề xuất chỉnh sửa CV."""
     session_storage = load_session_state(session_id)
@@ -368,7 +400,7 @@ async def suggest_cv_improvements(
 @app.post("/api/analyze-cv-layout")
 async def analyze_cv_layout(
     file: UploadFile = File(...),
-    session_id: str = Header(..., alias="X-Session-Id"),
+    session_id: str = Depends(get_session_id),
 ):
     """Phân tích layout CV từ file ảnh."""
     session_storage = load_session_state(session_id)
@@ -398,7 +430,7 @@ async def analyze_cv_layout(
 
 
 @app.post("/api/generate-improved-cv")
-async def generate_improved_cv(session_id: str = Header(..., alias="X-Session-Id")):
+async def generate_improved_cv(session_id: str = Depends(get_session_id)):
     """Tạo mô tả layout CV mới."""
     session_storage = load_session_state(session_id)
     try:
@@ -420,7 +452,7 @@ async def generate_improved_cv(session_id: str = Header(..., alias="X-Session-Id
 
 
 @app.get("/api/session-status")
-async def get_session_status(session_id: str = Header(..., alias="X-Session-Id")):
+async def get_session_status(session_id: str = Depends(get_session_id)):
     """Lấy trạng thái session hiện tại."""
     session_storage = load_session_state(session_id)
     persist_session_state(session_id, session_storage)
@@ -433,7 +465,7 @@ async def get_session_status(session_id: str = Header(..., alias="X-Session-Id")
 
 
 @app.get("/api/get-cv-jd")
-async def get_cv_jd(session_id: str = Header(..., alias="X-Session-Id")):
+async def get_cv_jd(session_id: str = Depends(get_session_id)):
     """Lấy nội dung CV và JD đã lưu."""
     session_storage = load_session_state(session_id)
     persist_session_state(session_id, session_storage)
@@ -446,9 +478,10 @@ async def get_cv_jd(session_id: str = Header(..., alias="X-Session-Id")):
 
 
 @app.post("/api/clear-session")
-async def clear_session(session_id: str = Header(..., alias="X-Session-Id")):
+async def clear_session(response: Response, session_id: str = Depends(get_session_id)):
     """Xóa session khi người dùng thoát hẳn."""
     clear_session_state(session_id)
+    response.delete_cookie("session_id")
     return {"success": True, "message": "Session cleared"}
 
 
