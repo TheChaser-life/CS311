@@ -66,8 +66,7 @@ jobs:
             docker compose pull
             
             # Restart sạch sẽ (Down -> Up) để đảm bảo config mới nhất
-            docker compose down
-            docker compose up -d
+            docker compose up -d --remove-orphans --force-recreate
             
             # Dọn dẹp
             docker image prune -f
