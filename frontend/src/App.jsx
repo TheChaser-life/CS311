@@ -17,20 +17,7 @@ import axios from 'axios';
 // Trường hợp build-time muốn override có thể truyền VITE_API_BASE, nếu không sẽ trả chuỗi rỗng.
 const resolveApiBase = () => import.meta.env?.VITE_API_BASE ?? '';
 
-const SESSION_STORAGE_KEY = 'resume_session_id';
 
-// Sinh sessionId lưu vào localStorage để backend bám theo Redis session tương ứng.
-const generateSessionId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  return [
-    'sess',
-    Date.now().toString(36),
-    Math.random().toString(36).substring(2, 10),
-  ].join('-');
-};
 
 // Cấu hình các tab chính hiển thị trên navbar.
 const tabs = [
@@ -668,28 +655,24 @@ export default function App() {
   const [chatState, setChatState] = useState({ messages: [], loading: false });
   const [sessionReady, setSessionReady] = useState(false);
 
-  // Khởi tạo session id (lưu localStorage) và cấu hình axios base headers.
+  // Khởi tạo session (Cookie) và cấu hình axios.
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    try {
-      let sessionId = window.localStorage.getItem(SESSION_STORAGE_KEY);
-      if (!sessionId) {
-        sessionId = generateSessionId();
-        window.localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    const initSession = async () => {
+      try {
+        const apiBase = resolveApiBase();
+        axios.defaults.baseURL = apiBase;
+        axios.defaults.withCredentials = true; // QUAN TRỌNG: Cho phép gửi Cookie
+        
+        // Gọi API để backend set cookie nếu chưa có
+        await axios.post('/api/init-session');
+        setSessionReady(true);
+      } catch (error) {
+        console.error('Failed to initialize session', error);
+        toast.error('Không thể kết nối với máy chủ!');
       }
+    };
 
-      const apiBase = resolveApiBase();
-      axios.defaults.baseURL = apiBase;
-      axios.defaults.withCredentials = false;
-      axios.defaults.headers.common['X-Session-Id'] = sessionId;
-      setSessionReady(true);
-    } catch (error) {
-      console.error('Failed to initialize session ID', error);
-      toast.error('Không thể khởi tạo phiên làm việc. Hãy tải lại trang!');
-    }
+    initSession();
   }, []);
 
   // Render tab tương ứng với lựa chọn hiện tại.
