@@ -220,7 +220,7 @@ def get_session_id(session_id: Optional[str] = Cookie(None)):
 
 
 @app.post("/api/analyze")
-async def analyze_cv_jd(
+def analyze_cv_jd(
     cv_file: Optional[UploadFile] = File(None),
     jd_file: Optional[UploadFile] = File(None),
     cv_text: Optional[str] = Form(None),
@@ -241,7 +241,8 @@ async def analyze_cv_jd(
             cv_type = "file"
             suffix = "." + cv_file.filename.split('.')[-1]
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                content = await cv_file.read()
+                # Đọc synchronous thay vì await read()
+                content = cv_file.file.read()
                 tmp.write(content)
                 cv_input = tmp.name
                 temp_files.append(tmp.name)
@@ -255,7 +256,7 @@ async def analyze_cv_jd(
             jd_type = "file"
             suffix = "." + jd_file.filename.split('.')[-1]
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                content = await jd_file.read()
+                content = jd_file.file.read()
                 tmp.write(content)
                 jd_input = tmp.name
                 temp_files.append(tmp.name)
@@ -302,7 +303,7 @@ async def analyze_cv_jd(
 
 
 @app.post("/api/find-jobs")
-async def find_jobs(session_id: str = Depends(get_session_id)):
+def find_jobs(session_id: str = Depends(get_session_id)):
     """Tìm việc làm phù hợp với CV đã lưu."""
     session_storage = load_session_state(session_id)
     try:
@@ -324,7 +325,7 @@ async def find_jobs(session_id: str = Depends(get_session_id)):
 
 
 @app.post("/api/chat")
-async def chat(
+def chat(
     input_data: ChatInput,
     session_id: str = Depends(get_session_id),
 ):
@@ -349,7 +350,7 @@ async def chat(
 
 
 @app.post("/api/suggest-cv-improvements")
-async def suggest_cv_improvements(
+def suggest_cv_improvements(
     session_id: str = Depends(get_session_id),
 ):
     """Đề xuất chỉnh sửa CV."""
@@ -398,7 +399,7 @@ async def suggest_cv_improvements(
 
 
 @app.post("/api/analyze-cv-layout")
-async def analyze_cv_layout(
+def analyze_cv_layout(
     file: UploadFile = File(...),
     session_id: str = Depends(get_session_id),
 ):
@@ -408,7 +409,7 @@ async def analyze_cv_layout(
     try:
         suffix = "." + file.filename.split('.')[-1]
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            content = await file.read()
+            content = file.file.read()
             tmp.write(content)
             temp_path = tmp.name
         
@@ -430,7 +431,7 @@ async def analyze_cv_layout(
 
 
 @app.post("/api/generate-improved-cv")
-async def generate_improved_cv(session_id: str = Depends(get_session_id)):
+def generate_improved_cv(session_id: str = Depends(get_session_id)):
     """Tạo mô tả layout CV mới."""
     session_storage = load_session_state(session_id)
     try:
