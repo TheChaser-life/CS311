@@ -1,0 +1,216 @@
+{
+  "results": [
+    {
+      "cv_file": "cv-experienced-network-engineer-resume-example.png",
+      "cv_type": ".png",
+      "jd_file": "jd-network.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 2236,
+      "timings": {
+        "extract_time": 24.823,
+        "analyze_time": 5.456,
+        "total_time": 30.279
+      },
+      "result_summary": {
+        "cv_skills_count": 20,
+        "jd_skills_count": 20,
+        "matched_skills_count": 6,
+        "missing_skills_count": 18
+      }
+    },
+    {
+      "cv_file": "cv_07_uiux_designer.txt",
+      "cv_type": ".txt",
+      "jd_file": "jd-network.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 2212,
+      "timings": {
+        "extract_time": 0.0,
+        "analyze_time": 4.059,
+        "total_time": 4.06
+      },
+      "result_summary": {
+        "cv_skills_count": 20,
+        "jd_skills_count": 20,
+        "matched_skills_count": 0,
+        "missing_skills_count": 20
+      }
+    },
+    {
+      "cv_file": "NguyenThanhTan_CV.pdf",
+      "cv_type": ".pdf",
+      "jd_file": "jd-frontend.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 1905,
+      "timings": {
+        "extract_time": 0.201,
+        "analyze_time": 4.041,
+        "total_time": 4.241
+      },
+      "result_summary": {
+        "cv_skills_count": 12,
+        "jd_skills_count": 20,
+        "matched_skills_count": 1,
+        "missing_skills_count": 19
+      }
+    },
+    {
+      "cv_file": "cv_sre_engineer.png",
+      "cv_type": ".png",
+      "jd_file": "jd-data.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 4654,
+      "timings": {
+        "extract_time": 20.772,
+        "analyze_time": 3.465,
+        "total_time": 24.237
+      },
+      "result_summary": {
+        "cv_skills_count": 19,
+        "jd_skills_count": 15,
+        "matched_skills_count": 0,
+        "missing_skills_count": 15
+      }
+    },
+    {
+      "cv_file": "cv_06_qa_engineer.txt",
+      "cv_type": ".txt",
+      "jd_file": "jd-qa.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 2272,
+      "timings": {
+        "extract_time": 0.0,
+        "analyze_time": 3.741,
+        "total_time": 3.741
+      },
+      "result_summary": {
+        "cv_skills_count": 20,
+        "jd_skills_count": 20,
+        "matched_skills_count": 18,
+        "missing_skills_count": 2
+      }
+    },
+    {
+      "cv_file": "cv_02_backend_developer.txt",
+      "cv_type": ".txt",
+      "jd_file": "jd-uiux-designer.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 2253,
+      "timings": {
+        "extract_time": 0.0,
+        "analyze_time": 2.952,
+        "total_time": 2.952
+      },
+      "result_summary": {
+        "cv_skills_count": 20,
+        "jd_skills_count": 20,
+        "matched_skills_count": 0,
+        "missing_skills_count": 20
+      }
+    },
+    {
+      "cv_file": "174c67d56a4eda6d.pdf",
+      "cv_type": ".pdf",
+      "jd_file": "jd-network.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 3133,
+      "timings": {
+        "extract_time": 16.921,
+        "analyze_time": 3.931,
+        "total_time": 20.852
+      },
+      "result_summary": {
+        "cv_skills_count": 20,
+        "jd_skills_count": 20,
+        "matched_skills_count": 3,
+        "missing_skills_count": 18
+      }
+    },
+    {
+      "cv_file": "0deb78ee10402051.pdf",
+      "cv_type": ".pdf",
+      "jd_file": "jd-data.txt",
+      "status": "FAILED",
+      "error": "CV text extraction failed"
+    },
+    {
+      "cv_file": "cv-data-engineer-salmon-resume-example.png",
+      "cv_type": ".png",
+      "jd_file": "jd-product-manager.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 2318,
+      "timings": {
+        "extract_time": 11.365,
+        "analyze_time": 4.341,
+        "total_time": 15.707
+      },
+      "result_summary": {
+        "cv_skills_count": 19,
+        "jd_skills_count": 31,
+        "matched_skills_count": 2,
+        "missing_skills_count": 20
+      }
+    },
+    {
+      "cv_file": "10.pdf",
+      "cv_type": ".pdf",
+      "jd_file": "jd-cloud-architect.txt",
+      "status": "SUCCESS",
+      "cv_text_length": 4257,
+      "timings": {
+        "extract_time": 28.157,
+        "analyze_time": 4.863,
+        "total_time": 33.021
+      },
+      "result_summary": {
+        "cv_skills_count": 20,
+        "jd_skills_count": 20,
+        "matched_skills_count": 2,
+        "missing_skills_count": 20
+      }
+    }
+  ],
+  "statistics": {
+    "total": 10,
+    "success": 9,
+    "failed": 1,
+    "extract_time": {
+      "min": 0.0,
+      "max": 28.157,
+      "avg": 11.36,
+      "median": 11.365
+    },
+    "analyze_time": {
+      "min": 2.952,
+      "max": 5.456,
+      "avg": 4.094,
+      "median": 4.041
+    },
+    "total_time": {
+      "min": 2.952,
+      "max": 33.021,
+      "avg": 15.454,
+      "median": 15.707
+    },
+    "by_file_type": {
+      ".png": {
+        "min": 15.707,
+        "max": 30.279,
+        "avg": 23.408,
+        "median": 24.237
+      },
+      ".txt": {
+        "min": 2.952,
+        "max": 4.06,
+        "avg": 3.584,
+        "median": 3.741
+      },
+      ".pdf": {
+        "min": 4.241,
+        "max": 33.021,
+        "avg": 19.371,
+        "median": 20.852
+      }
+    }
+  }
+}
