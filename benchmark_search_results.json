@@ -1,0 +1,479 @@
+{
+  "course_search": {
+    "results": [
+      {
+        "status": "SUCCESS",
+        "query": "Python programming course for beginners online free",
+        "num_results": 5,
+        "elapsed_time": 79.27,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://www.mygreatlearning.com/academy/learn-for-free/courses/python-fundamentals-for-beginners",
+            "snippet": "Test your skills with quizzes\n\n## About this course\n\nThis free online Python programming course is designed to teach you the essentials of Python, starting with core concepts like variables, data type",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.codecademy.com/learn/learn-python-3",
+            "snippet": "Learn scripting and how to build Python scripts from scratch. Set up your environment, structure your code, run the script, and explore real examples with tips to get started.\n\n### Related courses and",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.codecademy.com/catalog/language/python",
+            "snippet": "< 1 hour< 1 hour\n Free course\n\n  ### Python for Data Science: Working with Data\n\n  Learn loops, control flow, and functions while working hands-on to merge, aggregate, and analyze real-world datasets.",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://developers.google.com/edu/python",
+            "snippet": "Welcome to Google's Python Class -- this is a free class for people with a little bit of programming experience who want to learn Python. The class includes written materials, lecture videos, and lots",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://learn.microsoft.com/en-us/shows/intro-to-python-development/",
+            "snippet": "Even though we won't cover everything there is to know about Python in the course, we want to make sure we give you the foundation on programming in Python, starting from common everyday code and scen",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 200.0,
+        "relevance_score": 0.5143,
+        "category": "Programming",
+        "difficulty": "Beginner",
+        "query_id": 1
+      },
+      {
+        "status": "SUCCESS",
+        "query": "Machine Learning course with certificate 2024",
+        "num_results": 5,
+        "elapsed_time": 1.592,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://onlineexeced.mccombs.utexas.edu/online-ai-machine-learning-course",
+            "snippet": "## Elevate your career with advanced AI skills\n\nBecome an AI & Machine Learning expert\n\n Lead AI innovation by mastering core AI & ML concepts & technologies\n Build AI applications with GenAI, NLP, co",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://professional.mit.edu/course-catalog/professional-certificate-program-machine-learning-artificial-intelligence-0",
+            "snippet": "7 Top AI Certifications: Hotlist of 2024, eWeek, August 15, 2024\n Explore Professional courses on machine learning and artificial intelligence offered by MIT, Analytics Insight, March 14, 2024\n Interv",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://bootcamp-sl.discover.online.purdue.edu/ai-machine-learning-certification-course",
+            "snippet": "## Demand For AI and ML Course in 2025\n\nAI and ML professionals are in high demand globally. The global AI market is projected to grow at a staggering CAGR of 35.7% from (2024-2030) -Marketsandmarkets",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://bootcamp.engin.umich.edu/certifications/ai-and-machine-learning-course",
+            "snippet": "Organizations worldwide are rapidly integrating AI and machine learning into their operations, including finance, sales and marketing, product development and design, software engineering, business in",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.coursera.org/professional-certificates/ibm-machine-learning",
+            "snippet": "Visit the learner help center\n\nFinancial aid available,\n\n¹ Median salary and job opening data are sourced from Lightcast™ Job Postings Report. Content Creator, Machine Learning Engineer and Salesforce",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 200.0,
+        "relevance_score": 0.4333,
+        "category": "AI/ML",
+        "difficulty": "Intermediate",
+        "query_id": 2
+      },
+      {
+        "status": "SUCCESS",
+        "query": "AWS Solutions Architect certification training",
+        "num_results": 5,
+        "elapsed_time": 3.087,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://www.knowledgehut.com/us/cloud-computing/aws-solution-architect-certification-training",
+            "snippet": "The AWS training and certification that you will find at KnowledgeHut gives you an all-round knowledge to make you exam-ready. The AWS Solutions Architect training has 5 modules in total. The first on",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://careertraining.nccu.edu/training-programs/certified-aws-solutions-architect-voucher-included/",
+            "snippet": "Image 24: phone iconSchedule a CallRequest Info)\n\nImage 25: close icon\n\n    Overview \n    Objective \n   Syllabus\n    Requirements \n    Prerequisites \n    Instructor \n    FAQs \nENROLL NOW)\n\nphone Call ",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+            "snippet": "Training and Certification\n\n Get Trained\n Get Certified\n Develop Your Team\n AWS Partner Training\n Education Programs\n More\n\n Certification›\n Certified Solutions Architect - Associate\n\n# AWS Certified ",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.coursera.org/professional-certificates/aws-cloud-solutions-architect",
+            "snippet": "In this course, you’ll get prepared to begin your career architecting solutions on AWS. Through a series of use case scenarios and practical learning, you’ll learn to identify services and features to",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://aws.amazon.com/training/learn-about/architect/",
+            "snippet": "Search\n\nTraining and Certification\n\n# Solutions Architect\n\nGet started on solutions architect training with content built by AWS experts\n\n## Learn step-by-step with the Solutions Architect Learning Pl",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 200.0,
+        "relevance_score": 0.72,
+        "category": "Cloud",
+        "difficulty": "Intermediate",
+        "query_id": 3
+      },
+      {
+        "status": "SUCCESS",
+        "query": "React.js tutorial for frontend developers",
+        "num_results": 5,
+        "elapsed_time": 1.53,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://medium.com/@elightwalk/advanced-react-js-techniques-for-experienced-developers-75c18f1ecb71",
+            "snippet": "Sitemap\n\nOpen in app\n\nSign in\n\nSign in\n\n# Advanced React.js Techniques for Experienced Developers\n\nElightwalk Technology\n\n5 min read\n\n·\n\nNov 13, 2025\n\n--\n\nReact.js is among the strongest and most adap",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.youtube.com/watch?v=SqcY0GlETPk",
+            "snippet": "widely used JavaScript library for front-end development so if you're looking for a job as a front-end developer you should know how to confidently build applications with react but why was react crea",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.codecademy.com/learn/learn-advanced-react",
+            "snippet": "## About this course\n\nTake your React skills to the next level with this advanced course. Learn key techniques like error handling, performance optimization, and custom hooks to build scalable, effici",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.coursera.org/learn/advanced-react",
+            "snippet": "You’ll examine different types of React components and learn various characteristics and when to use them. You’ll dig into more advanced hooks and create your own. You’ll look into building forms with",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.w3schools.com/REACT/DEFAULT.ASP",
+            "snippet": "# React Tutorial\n\n❮ Home Next ❯\n\n## Learn React\n\nReact is a JavaScript library for building user interfaces.\n\nReact is used to build single-page applications.\n\nReact allows us to create reusable UI co",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 200.0,
+        "relevance_score": 0.32,
+        "category": "Frontend",
+        "difficulty": "Intermediate",
+        "query_id": 4
+      },
+      {
+        "status": "SUCCESS",
+        "query": "Docker and Kubernetes for DevOps engineers",
+        "num_results": 5,
+        "elapsed_time": 8.037,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://www.firefly.ai/academy/devops-best-practices",
+            "snippet": "DevOps \n\nExplore the resource\n\nImage 17\n\nBy 2025, using Terraform for infrastructure, CI/CD pipelines for delivery, and Kubernetes for workloads is the baseline. Nobody is impressed by that anymore; i",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.youtube.com/watch?v=xatmpeUAyE4",
+            "snippet": "What you will learn in this Docker tutorial:\n   What is Docker and why it is used\n   Docker Architecture (Image, Container, Dockerfile)\n   Difference between VM and Docker\n   How to install Docker\n   ",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://octopus.com/devops/kubernetes-management/",
+            "snippet": "For developers, desktop IDE integrations bring Kubernetes functionality closer to the development workflow, enabling testing, debugging, and deployment directly from the code editor. This helps close ",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://kubernetes.io/blog/2025/11/25/configuration-good-practices/",
+            "snippet": "### Use Deployments for apps that should always be running\n\nA Deployment, which both creates a ReplicaSet to ensure that the desired number of Pods is always available, and specifies a strategy to rep",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://spacelift.io/blog/kubernetes-best-practices",
+            "snippet": "Policies to control what kind of resources engineers can create, what parameters they can have, how many approvals you need for a run, what kind of task you execute, what happens when a pull request i",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 200.0,
+        "relevance_score": 0.4333,
+        "category": "DevOps",
+        "difficulty": "Intermediate",
+        "query_id": 5
+      }
+    ],
+    "aggregate": {
+      "total_queries": 5,
+      "successful_queries": 5,
+      "failed_queries": 0,
+      "success_rate": 1.0,
+      "avg_response_time": 18.703,
+      "min_response_time": 1.53,
+      "max_response_time": 79.27,
+      "avg_num_results": 5.0,
+      "avg_relevance": 0.4842,
+      "total_urls_found": 25
+    }
+  },
+  "job_search": {
+    "results": [
+      {
+        "status": "SUCCESS",
+        "query": "Python Developer jobs remote 2024",
+        "num_results": 5,
+        "elapsed_time": 2.502,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://flexiple.com/jobs/remote-python-developer-jobs",
+            "snippet": "# Remote Freelance Python Developer Jobs with Top Tech Companies\n\nAt Flexiple, freelance developers work on Python developer jobs with top tech startups & companies. All the jobs are fully remote, wit",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.workingnomads.com/remote-python-jobs",
+            "snippet": "# Remote Python Jobs\n\nExplore the fully remote python jobs worldwide. Apply to positions like Python Developer, Data Scientist, Machine Learning Engineer, and more. Whether you're seeking full-time, p",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://dailyremote.com/remote-python-developer-jobs",
+            "snippet": "# Remote Python Developer Jobs\n\n## 211 Python Developer jobs available for remote work from home. Apply for positions such as Back-end Python Web Developer, Python Developer, python developer and more",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.linkedin.com/jobs/python-developer-remote-jobs",
+            "snippet": "Get notified about new Python Developer Remote jobs in United States.\n\n Sign in to create job alert\n\n# 3,000+ Python Developer Remote Jobs in United States\n\n Python Developer \n\n  ### Python Developer\n",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.builtinchicago.org/jobs/remote/dev-engineering/python",
+            "snippet": "# Top Remote Python Jobs in Chicago, IL\n\n## Staff Backend Engineer (Python)\n\nReposted 21 Hours AgoSaved\n\nRemote or Hybrid\n\nRemote Chicago, IL\n\n190K-225K Annually\n\nSenior level\n\n190K-225K Annually\n\nSen",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 200.0,
+        "relevance_score": 0.76,
+        "category": "Backend",
+        "seniority": "Mid-level",
+        "location": "Remote",
+        "query_id": 1
+      },
+      {
+        "status": "SUCCESS",
+        "query": "Frontend React Developer Ho Chi Minh City",
+        "num_results": 5,
+        "elapsed_time": 0.981,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://vn.linkedin.com/jobs/react-developer-jobs-ho-chi-minh-city-metropolitan-area",
+            "snippet": "Nhận thông báo về việc làm mới React Developer tại Ho Chi Minh City Metropolitan Area.\n\n# 155React Developer Việc làm vào Ho Chi Minh City Metropolitan Area\n\n### Developer cho website/ứng dụng\n\n#### C",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://web3.career/web3-jobs-vietnam+react",
+            "snippet": "| Job Position | Company | Posted | Location | Salary | Tags |\n ---  ---  --- |\n| Senior Frontend Engineer | Binance | 2mo | Vietnam |  | engineer     front end     senior     blockchain     react |\n|",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://kyanon.digital/blog/top-10-react-development-companies-in-vietnam/",
+            "snippet": "build-your-saas-faster-with-a-vietnam-product-team\n\n### Build Your SaaS Faster With a Vietnam Product Team\n\nMobile App Engineering Trusted by Singapore Brands\n\n### Mobile App Engineering Trusted by Si",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.hdwebsoft.com/services/reactjs-development",
+            "snippet": "logo\nlogo\ndark logo\ndark logo\nlight logo\nlight logo\n\n#### years of experience\n\nISO 9001 Certification\nISO 9001 Certification\n\n#### engineers in-house\n\nISO 27001 Certification\nISO 27001 Certification\nm",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://itviec.com/it-jobs/front-end-developer/ho-chi-minh-hcm",
+            "snippet": "24 Hot front end developer jobs for you in Ho Chi Minh on ITviec.com. Top companies, high salary. Get your new front end developer job now!",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 187.8,
+        "relevance_score": 0.2857,
+        "category": "Frontend",
+        "seniority": "Mid-level",
+        "location": "Vietnam",
+        "query_id": 2
+      },
+      {
+        "status": "SUCCESS",
+        "query": "Machine Learning Engineer jobs hiring now",
+        "num_results": 5,
+        "elapsed_time": 3.994,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://www.indeed.com/q-machine-learning-engineer-jobs.html",
+            "snippet": "18805 Machine Learning Engineer jobs available on Indeed.com. Apply to Machine Learning Engineer, Environmental Engineer, Back End Developer and more!",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.indeed.com/q-machine-learning-engineer-l-minneapolis,-mn-jobs.html",
+            "snippet": "222 Machine Learning Engineer jobs available in Minneapolis, MN on Indeed.com. Apply to Data Scientist, Ai/ml Engineer, Technical Lead and more!",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.linkedin.com/jobs/machine-learning-engineer-jobs",
+            "snippet": "Get notified about new Machine Learning Engineer jobs in United States.\n\n# 52,000+ Machine Learning Engineer Jobs in United States\n\n### Machine Learning Engineer Intern\n\n#### Tinder\n\n### Software Engi",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://careers.amgen.com/en/job/washington-d-c/associate-machine-learning-engineer/87/90561356880",
+            "snippet": "Associate Machine Learning Engineer. Two lab ... Jan. 15, 2026 CATEGORY: Information Systems SALARY RANGE: 103,334.00 USD - 150,749.00 USD.",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.linkedin.com/jobs/machine-learning-engineer-jobs-minneapolis-mn?trk=jobs_directory",
+            "snippet": "Get notified about new Machine Learning Engineer jobs in Minneapolis.\n\n# 404 Machine Learning Engineer Jobs in Minneapolis\n\n### Machine Learning Engineer\n\n#### Capgemini\n\n### AI Engineer\n\n#### Best Bu",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 166.6,
+        "relevance_score": 0.6333,
+        "category": "AI/ML",
+        "seniority": "Mid-level",
+        "location": "Any",
+        "query_id": 3
+      },
+      {
+        "status": "SUCCESS",
+        "query": "DevOps Engineer AWS experience required",
+        "num_results": 5,
+        "elapsed_time": 2.36,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://aws.amazon.com/certification/certified-devops-engineer-professional/",
+            "snippet": "Per the exam guide, the recommended experience prior to taking this exam is 2 or more years of experience in provisioning, operating, and managing AWS",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.accenture.com/au-en/careers/jobdetails?id=R00094525_en",
+            "snippet": "Join Accenture to work at the heart of change. Choosing Accenture and the AWS Practice will take your AWS experience and skills to the next level and allow you to work in an innovative and collaborati",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://spacelift.io/blog/how-to-become-devops-engineer",
+            "snippet": "You’ll learn about the mindset, tools, and skills you’ll need to master, and also how to get a DevOps job. It takes about six months to become a DevOps engineer, assuming you have some basic Linux adm",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.velvetjobs.com/job-descriptions/aws-devops",
+            "snippet": "We have included AWS devops job description templates that you can modify and use. Use DevOps principles and methodologies to enable the rapid deployment of software and services by coordinating softw",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.tealhq.com/skills/aws-devops-engineer",
+            "snippet": "# AWS DevOps Engineer Skills. In the dynamic field of AWS DevOps Engineering, a multifaceted skill set is essential to manage the continuous integration and delivery pipelines that enable rapid and re",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 190.0,
+        "relevance_score": 0.44,
+        "category": "DevOps",
+        "seniority": "Mid-level",
+        "location": "Any",
+        "query_id": 4
+      },
+      {
+        "status": "SUCCESS",
+        "query": "Junior Software Developer internship 2024",
+        "num_results": 5,
+        "elapsed_time": 2.907,
+        "results": [
+          {
+            "title": "No title",
+            "url": "https://jobs.dropbox.com/teams/emerging-talent",
+            "snippet": "# FAQs\n\n#### When do you hire interns?\n\nIn 2024, we will offer Summer internships only. The majority of our global interviews take place in line with local academic calendars, typically late August–Ma",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.atlassian.com/company/careers/earlycareers",
+            "snippet": "#### Australia & New Zealand\n\nInternship applications open around January for a November start.\n\n#### India\n\nInternship applications open around July for an April - June start.\n\n#### Poland\n\nInternshi",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://careers.microsoft.com/students/",
+            "snippet": "The Discovery Program is a unique opportunity for students who are passionate about technology and want to make a positive impact on the world and society. This four-week internship is open to rising ",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.jpmorganchase.com/careers/explore-opportunities/programs/software-engineer-summer",
+            "snippet": "Build a best-in-class Electronic Trading platform for the Rates and Emerging Markets business lines in the Investment Bank\n Develop new Digital platforms and APIs to enhance the end-to-end client expe",
+            "has_url": true
+          },
+          {
+            "title": "No title",
+            "url": "https://www.accenture.com/us-en/careers/life-at-accenture/internships-students",
+            "snippet": "Provide management support and analyze and improve business processes\n Develop change management and organizational strategies\n Build front-end solutions or design and implement software\n Use quantita",
+            "has_url": true
+          }
+        ],
+        "has_valid_urls": 5,
+        "avg_snippet_length": 200.0,
+        "relevance_score": 0.2,
+        "category": "General",
+        "seniority": "Junior",
+        "location": "Any",
+        "query_id": 5
+      }
+    ],
+    "aggregate": {
+      "total_queries": 5,
+      "successful_queries": 5,
+      "failed_queries": 0,
+      "success_rate": 1.0,
+      "avg_response_time": 2.549,
+      "min_response_time": 0.981,
+      "max_response_time": 3.994,
+      "avg_num_results": 5.0,
+      "avg_relevance": 0.4638,
+      "total_urls_found": 25
+    }
+  }
+}
