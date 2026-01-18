@@ -1,0 +1,423 @@
+{
+  "results": [
+    {
+      "test_id": 1,
+      "cv_file": "data-for-png-extract/cv-data-engineer-salmon-resume-example.png",
+      "status": "SUCCESS",
+      "elapsed_time": 6.34,
+      "predicted_result": {
+        "layout_type": "Two Column",
+        "has_sidebar": false,
+        "detected_sections": [
+          "Header",
+          "Contact Information",
+          "Work Experience",
+          "Education",
+          "Skills"
+        ],
+        "color_scheme_description": "Màu đơn giản với các điểm nhấn đỏ, nhìn chuyên nghiệp",
+        "typography_description": "Font rõ ràng, dễ đọc, kích cỡ biểu thị sự ưu tiên tốt",
+        "scores": {
+          "layout_structure": 8,
+          "typography": 9,
+          "color_scheme": 8,
+          "section_organization": 9,
+          "professionalism": 9
+        },
+        "total_score": 8.6,
+        "strengths": [
+          "Cấu trúc rõ ràng",
+          "Typography dễ đọc",
+          "Tính chuyên nghiệp cao"
+        ],
+        "improvements": [
+          "Có thể thêm phần sidebar để làm rõ các phần phụ trợ"
+        ]
+      },
+      "expected_scores": {
+        "layout_structure": 8,
+        "typography": 8,
+        "color_scheme": 7,
+        "section_organization": 8,
+        "professionalism": 8
+      },
+      "score_accuracy": {
+        "mae": 0.8,
+        "accuracy": 1.0,
+        "within_tolerance_count": 5,
+        "total_criteria": 5,
+        "details": {
+          "layout_structure": {
+            "predicted": 8,
+            "expected": 8,
+            "error": 0,
+            "within_tolerance": true
+          },
+          "typography": {
+            "predicted": 9,
+            "expected": 8,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "color_scheme": {
+            "predicted": 8,
+            "expected": 7,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "section_organization": {
+            "predicted": 9,
+            "expected": 8,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "professionalism": {
+            "predicted": 9,
+            "expected": 8,
+            "error": 1,
+            "within_tolerance": true
+          }
+        }
+      }
+    },
+    {
+      "test_id": 2,
+      "cv_file": "data-for-png-extract/cv-devops-engineer.png",
+      "status": "SUCCESS",
+      "elapsed_time": 5.86,
+      "predicted_result": {
+        "layout_type": "Two Column",
+        "has_sidebar": false,
+        "detected_sections": [
+          "Header",
+          "Summary",
+          "Experience",
+          "Skills",
+          "Education",
+          "Other"
+        ],
+        "color_scheme_description": "Simple black text with blue accents for section titles",
+        "typography_description": "Clear, readable sans-serif font with good size hierarchy",
+        "scores": {
+          "layout_structure": 8,
+          "typography": 9,
+          "color_scheme": 8,
+          "section_organization": 9,
+          "professionalism": 9
+        },
+        "total_score": 8.6,
+        "strengths": [
+          "Clear typography",
+          "Logical section organization",
+          "Professional layout"
+        ],
+        "improvements": [
+          "Could add more visual elements",
+          "Consider more color variety for distinction"
+        ]
+      },
+      "expected_scores": {
+        "layout_structure": 9,
+        "typography": 8,
+        "color_scheme": 8,
+        "section_organization": 9,
+        "professionalism": 9
+      },
+      "score_accuracy": {
+        "mae": 0.4,
+        "accuracy": 1.0,
+        "within_tolerance_count": 5,
+        "total_criteria": 5,
+        "details": {
+          "layout_structure": {
+            "predicted": 8,
+            "expected": 9,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "typography": {
+            "predicted": 9,
+            "expected": 8,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "color_scheme": {
+            "predicted": 8,
+            "expected": 8,
+            "error": 0,
+            "within_tolerance": true
+          },
+          "section_organization": {
+            "predicted": 9,
+            "expected": 9,
+            "error": 0,
+            "within_tolerance": true
+          },
+          "professionalism": {
+            "predicted": 9,
+            "expected": 9,
+            "error": 0,
+            "within_tolerance": true
+          }
+        }
+      }
+    },
+    {
+      "test_id": 3,
+      "cv_file": "data-for-png-extract/cv-experienced-network-engineer-resume-example.png",
+      "status": "SUCCESS",
+      "elapsed_time": 5.19,
+      "predicted_result": {
+        "layout_type": "Two Column",
+        "has_sidebar": true,
+        "detected_sections": [
+          "Header",
+          "Contact",
+          "Education",
+          "Skills",
+          "Career Objective",
+          "Work Experience"
+        ],
+        "color_scheme_description": "Màu xanh đậm và trắng tạo sự tương phản rõ ràng và chuyên nghiệp",
+        "typography_description": "Font rõ ràng, dễ đọc với độ tương phản tốt giữa các phần",
+        "scores": {
+          "layout_structure": 9,
+          "typography": 8,
+          "color_scheme": 9,
+          "section_organization": 8,
+          "professionalism": 9
+        },
+        "total_score": 8.6,
+        "strengths": [
+          "Thiết kế hai cột hiệu quả",
+          "Bảng màu chuyên nghiệp",
+          "Typography dễ đọc"
+        ],
+        "improvements": [
+          "Cần cải thiện độ nổi bật của các tiêu đề mục lớn hơn",
+          "Kiểm tra lại các khoảng cách và lề để tăng tính thẩm mỹ"
+        ]
+      },
+      "expected_scores": {
+        "layout_structure": 7,
+        "typography": 8,
+        "color_scheme": 7,
+        "section_organization": 8,
+        "professionalism": 8
+      },
+      "score_accuracy": {
+        "mae": 1.0,
+        "accuracy": 0.6,
+        "within_tolerance_count": 3,
+        "total_criteria": 5,
+        "details": {
+          "layout_structure": {
+            "predicted": 9,
+            "expected": 7,
+            "error": 2,
+            "within_tolerance": false
+          },
+          "typography": {
+            "predicted": 8,
+            "expected": 8,
+            "error": 0,
+            "within_tolerance": true
+          },
+          "color_scheme": {
+            "predicted": 9,
+            "expected": 7,
+            "error": 2,
+            "within_tolerance": false
+          },
+          "section_organization": {
+            "predicted": 8,
+            "expected": 8,
+            "error": 0,
+            "within_tolerance": true
+          },
+          "professionalism": {
+            "predicted": 9,
+            "expected": 8,
+            "error": 1,
+            "within_tolerance": true
+          }
+        }
+      }
+    },
+    {
+      "test_id": 4,
+      "cv_file": "data-for-png-extract/cv-ml.png",
+      "status": "SUCCESS",
+      "elapsed_time": 6.51,
+      "predicted_result": {
+        "layout_type": "Two Column",
+        "has_sidebar": true,
+        "detected_sections": [
+          "Header",
+          "Summary",
+          "Experience",
+          "Skills",
+          "Projects",
+          "Education"
+        ],
+        "color_scheme_description": "Màu sắc chính là trắng và đen với một chút xanh dương để làm nổi bật tiêu đề và thông tin quan trọng.",
+        "typography_description": "Font chữ rõ ràng, dễ đọc với kích thước hợp lý, thể hiện sự chuyên nghiệp và cân đối.",
+        "scores": {
+          "layout_structure": 8,
+          "typography": 9,
+          "color_scheme": 8,
+          "section_organization": 9,
+          "professionalism": 9
+        },
+        "total_score": 8.6,
+        "strengths": [
+          "Bố cục rõ ràng và khoa học",
+          "Typography dễ đọc và chuyên nghiệp",
+          "Tổ chức thông tin hợp lý"
+        ],
+        "improvements": [
+          "Cân nhắc sử dụng nhiều màu sắc để tạo điểm nhấn hơn"
+        ]
+      },
+      "expected_scores": {
+        "layout_structure": 7,
+        "typography": 7,
+        "color_scheme": 6,
+        "section_organization": 7,
+        "professionalism": 7
+      },
+      "score_accuracy": {
+        "mae": 1.8,
+        "accuracy": 0.2,
+        "within_tolerance_count": 1,
+        "total_criteria": 5,
+        "details": {
+          "layout_structure": {
+            "predicted": 8,
+            "expected": 7,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "typography": {
+            "predicted": 9,
+            "expected": 7,
+            "error": 2,
+            "within_tolerance": false
+          },
+          "color_scheme": {
+            "predicted": 8,
+            "expected": 6,
+            "error": 2,
+            "within_tolerance": false
+          },
+          "section_organization": {
+            "predicted": 9,
+            "expected": 7,
+            "error": 2,
+            "within_tolerance": false
+          },
+          "professionalism": {
+            "predicted": 9,
+            "expected": 7,
+            "error": 2,
+            "within_tolerance": false
+          }
+        }
+      }
+    },
+    {
+      "test_id": 5,
+      "cv_file": "data-for-png-extract/cv-security-engineer-elegant-resume-example.png",
+      "status": "SUCCESS",
+      "elapsed_time": 5.49,
+      "predicted_result": {
+        "layout_type": "Two Column",
+        "has_sidebar": true,
+        "detected_sections": [
+          "Header",
+          "Education",
+          "Skills",
+          "Work Experience"
+        ],
+        "color_scheme_description": "Black and white with gray accents, professional and subtle",
+        "typography_description": "Clear font choices with good size hierarchy, headings are bold for emphasis",
+        "scores": {
+          "layout_structure": 9,
+          "typography": 9,
+          "color_scheme": 8,
+          "section_organization": 9,
+          "professionalism": 9
+        },
+        "total_score": 8.8,
+        "strengths": [
+          "Well-structured layout",
+          "Clear section separation",
+          "Professional color scheme"
+        ],
+        "improvements": [
+          "Consider adding more accent colors for emphasis"
+        ]
+      },
+      "expected_scores": {
+        "layout_structure": 8,
+        "typography": 9,
+        "color_scheme": 8,
+        "section_organization": 8,
+        "professionalism": 9
+      },
+      "score_accuracy": {
+        "mae": 0.4,
+        "accuracy": 1.0,
+        "within_tolerance_count": 5,
+        "total_criteria": 5,
+        "details": {
+          "layout_structure": {
+            "predicted": 9,
+            "expected": 8,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "typography": {
+            "predicted": 9,
+            "expected": 9,
+            "error": 0,
+            "within_tolerance": true
+          },
+          "color_scheme": {
+            "predicted": 8,
+            "expected": 8,
+            "error": 0,
+            "within_tolerance": true
+          },
+          "section_organization": {
+            "predicted": 9,
+            "expected": 8,
+            "error": 1,
+            "within_tolerance": true
+          },
+          "professionalism": {
+            "predicted": 9,
+            "expected": 9,
+            "error": 0,
+            "within_tolerance": true
+          }
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "total": 5,
+    "success": 5,
+    "failed": 0,
+    "skipped": 0,
+    "avg_mae": 0.88,
+    "avg_accuracy": 0.76,
+    "avg_predicted_scores": {
+      "layout_structure": 8.4,
+      "typography": 8.8,
+      "color_scheme": 8.2,
+      "section_organization": 8.8,
+      "professionalism": 9.0
+    }
+  }
+}
