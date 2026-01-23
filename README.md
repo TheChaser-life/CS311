@@ -4,5 +4,5 @@
 
 Phát triển bởi: **Võ Phước Thịnh, Liên Phúc Thịnh**
 
-
+Mọi thông tin chi tiết về website nằm trong file báo cáo
 
