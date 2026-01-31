@@ -1,0 +1,52 @@
+services:
+  # 1. Redis: Giữ nguyên
+  redis:
+    image: redis:alpine
+    container_name: app-redis
+    restart: always
+    command: redis-server --appendonly yes
+    # Không expose port ra ngoài host để bảo mật
+
+  # 2. Backend API
+  backend:
+    # THAY ĐỔI 1: Dùng biến ${TAG} thay vì số phiên bản cứng
+    # Nếu không có biến TAG, mặc định dùng 'latest'
+    image: ${REGISTRY_URL}/resume/backend:${TAG:-staging}
+    container_name: app-backend
+    restart: always
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Các biến này sẽ lấy từ file .env trên server hoặc biến môi trường hệ thống
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+    depends_on:
+      - redis
+
+  # 3. Frontend
+  frontend:
+    # THAY ĐỔI 2: Dùng Image từ Harbor, KHÔNG build tại server
+    image: ${REGISTRY_URL}/resume/frontend:${TAG:-staging}
+    container_name: app-frontend
+    restart: always
+    # THAY ĐỔI 3: Xóa bỏ hoàn toàn phần 'build:' 
+    # Vì CI (GitHub Actions) đã build xong rồi, server chỉ việc tải về dùng.
+    
+    # Giữ nguyên port mapping nếu bạn muốn test trực tiếp không qua Nginx (Optional)
+    # ports: 
+    #   - "3000:80" 
+
+  # 4. Nginx (Web Server)
+  nginx:
+    image: nginx:alpine
+    container_name: app-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - frontend
+      - backend
